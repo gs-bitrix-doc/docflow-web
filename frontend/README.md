@@ -125,7 +125,8 @@ src/
 
 Макеты: `docs/designs/`
 
-- `dashboard_v3.html` — TaskList: группировка по коммитам, live-прогресс, batch-режим, пустые состояния
+- `dashboard_v4.html` — TaskList: группировка по коммитам, live-прогресс, batch-режим (floating bar), вкладка «К публикации», пустые состояния
+- `taskdetail_v1.html` — TaskDetail: три состояния (Done+Diff, Running+Logs, Conflict+3-way merge)
 
 CSS-переменные (`src/app/styles/vars.css`):
 
