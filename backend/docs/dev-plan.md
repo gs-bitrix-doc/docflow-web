@@ -115,14 +115,14 @@ Integration (`tests/test_auth.py`):
 
 **Эндпоинты:**
 - `GET /auth/github/connect` — редирект на GitHub OAuth с `state` (CSRF)
-- `GET /auth/github/callback` — обмен code → token, сохранение `github_id / login / access_token` в users
+- `GET /auth/github/callback` — для авторизованного пользователя: обмен code → token, сохранение `github_id / login / access_token` в users
 - `DELETE /auth/github/connect` — отвязка (обнуляет GitHub-поля)
 
 **Детали:**
 - `state` генерируется через `secrets.token_urlsafe(16)`, хранится в cookie на время OAuth-флоу
 - При callback проверить `state` из cookie
 - Если `github_id` уже привязан к другому пользователю — 409
-- После callback редиректить на `http://localhost:3000/settings`
+- После callback редиректить на `${FRONTEND_BASE_URL}/settings`
 
 **Безопасность:**
 - `github_access_token` хранить в БД **зашифрованным**, не plaintext. Шифрование симметричное: AES-256-GCM через библиотеку `cryptography` (`Fernet`), ключ — `SESSION_SECRET`. Расшифровывать только в момент обращения к GitHub API
@@ -421,7 +421,7 @@ CRUD для проектов.
 **Безопасность — финальный чеклист:**
 - CORS: `allow_origins=["http://localhost:3000"]` в dev, `["https://your-domain.com"]` в prod — никогда не `["*"]` (иначе любой сайт может делать запросы от имени пользователя через cookie)
 - Убедиться что в Swagger UI (`/docs`) не торчат секретные поля (`password_hash`, `github_access_token`, `webhook_secret`)
-- Все роутеры кроме `/health`, `/auth/register`, `/auth/login`, `/auth/github/callback`, `POST /webhook/{id}` — требуют валидный JWT (`Depends(get_current_user)`)
+- Все роутеры кроме `/health`, `/auth/register`, `/auth/login`, `POST /webhook/{id}` — требуют валидный JWT (`Depends(get_current_user)`)
 - Заголовки безопасности через middleware: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`
 - `slowapi` rate limiter подключён глобально в `main.py`
 - Добавить `cryptography` в `pyproject.toml` для шифрования GitHub токенов

@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi.responses import JSONResponse, RedirectResponse
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy import select
@@ -16,10 +17,17 @@ from app.models.user import User
 from app.schemas.user import ChangePasswordRequest, UserLogin, UserRead, UserRegister
 from app.services.auth import (
     DUMMY_PASSWORD_HASH,
+    GITHUB_OAUTH_STATE_COOKIE_NAME,
+    GITHUB_OAUTH_STATE_MAX_AGE_SECONDS,
     SESSION_COOKIE_NAME,
     SESSION_LIFETIME_DAYS,
     create_jwt,
+    encrypt_github_access_token,
+    exchange_code_for_token,
+    generate_github_oauth_state,
     get_current_user,
+    get_github_oauth_url,
+    get_github_user,
     hash_password_async,
     verify_password_async,
 )
@@ -48,6 +56,30 @@ def clear_session_cookie(response: Response) -> None:
     settings = get_settings()
     response.delete_cookie(
         key=SESSION_COOKIE_NAME,
+        httponly=True,
+        samesite="lax",
+        secure=not settings.debug,
+        path="/",
+    )
+
+
+def set_github_oauth_state_cookie(response: Response, state: str) -> None:
+    settings = get_settings()
+    response.set_cookie(
+        key=GITHUB_OAUTH_STATE_COOKIE_NAME,
+        value=state,
+        max_age=GITHUB_OAUTH_STATE_MAX_AGE_SECONDS,
+        httponly=True,
+        samesite="lax",
+        secure=not settings.debug,
+        path="/",
+    )
+
+
+def clear_github_oauth_state_cookie(response: Response) -> None:
+    settings = get_settings()
+    response.delete_cookie(
+        key=GITHUB_OAUTH_STATE_COOKIE_NAME,
         httponly=True,
         samesite="lax",
         secure=not settings.debug,
@@ -124,6 +156,62 @@ async def me(current_user: CurrentUser) -> UserRead:
     return to_user_read(current_user)
 
 
+@router.get("/github/connect")
+async def github_connect(_: CurrentUser) -> RedirectResponse:
+    state = generate_github_oauth_state()
+    response = RedirectResponse(url=get_github_oauth_url(state), status_code=status.HTTP_302_FOUND)
+    set_github_oauth_state_cookie(response, state)
+    return response
+
+
+@router.get("/github/callback")
+async def github_callback(
+    code: str,
+    state: str,
+    session: DbSession,
+    current_user: CurrentUser,
+    request: Request,
+) -> Response:
+    github_oauth_state = request.cookies.get(GITHUB_OAUTH_STATE_COOKIE_NAME)
+    if not github_oauth_state or github_oauth_state != state:
+        response = JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"detail": "Invalid OAuth state"},
+        )
+        clear_github_oauth_state_cookie(response)
+        return response
+
+    access_token = await exchange_code_for_token(code)
+    github_user = await get_github_user(access_token)
+
+    existing_user = await session.scalar(
+        select(User).where(
+            User.github_id == github_user["id"],
+            User.id != current_user.id,
+        )
+    )
+    if existing_user is not None:
+        response = JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"detail": "GitHub account already linked to another user"},
+        )
+        clear_github_oauth_state_cookie(response)
+        return response
+
+    current_user.github_id = int(github_user["id"])
+    current_user.github_login = str(github_user["login"])
+    current_user.github_access_token = encrypt_github_access_token(access_token)
+    await session.commit()
+
+    settings = get_settings()
+    response = RedirectResponse(
+        url=f"{settings.frontend_base_url.rstrip('/')}/settings",
+        status_code=status.HTTP_302_FOUND,
+    )
+    clear_github_oauth_state_cookie(response)
+    return response
+
+
 @router.post("/change-password")
 async def change_password(
     payload: ChangePasswordRequest,
@@ -144,4 +232,13 @@ async def change_password(
 @router.post("/logout")
 async def logout(response: Response, _: CurrentUser) -> dict[str, bool]:
     clear_session_cookie(response)
+    return {"ok": True}
+
+
+@router.delete("/github/connect")
+async def disconnect_github(session: DbSession, current_user: CurrentUser) -> dict[str, bool]:
+    current_user.github_id = None
+    current_user.github_login = None
+    current_user.github_access_token = None
+    await session.commit()
     return {"ok": True}

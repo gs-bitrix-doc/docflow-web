@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     github_client_id: str | None = Field(default=None, alias="GITHUB_CLIENT_ID")
     github_client_secret: str | None = Field(default=None, alias="GITHUB_CLIENT_SECRET")
     github_callback_url: str | None = Field(default=None, alias="GITHUB_CALLBACK_URL")
+    frontend_base_url: str = Field(default="http://localhost:3000", alias="FRONTEND_BASE_URL")
 
     api_key: str | None = Field(default=None, alias="API_KEY")
     base_url: str | None = Field(default=None, alias="BASE_URL")

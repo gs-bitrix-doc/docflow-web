@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import base64
+import hashlib
+import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 import bcrypt
+import httpx
+from cryptography.fernet import Fernet
 from fastapi import Cookie, Depends, HTTPException, status
 from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,6 +22,12 @@ from app.models.user import User
 ALGORITHM = "HS256"
 SESSION_COOKIE_NAME = "session"
 SESSION_LIFETIME_DAYS = 30
+GITHUB_OAUTH_SCOPE = "repo"
+GITHUB_OAUTH_STATE_COOKIE_NAME = "github_oauth_state"
+GITHUB_OAUTH_STATE_MAX_AGE_SECONDS = 300
+GITHUB_AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
+GITHUB_ACCESS_TOKEN_URL = "https://github.com/login/oauth/access_token"
+GITHUB_USER_URL = "https://api.github.com/user"
 
 DbSession = Annotated[AsyncSession, Depends(get_db_session)]
 SessionToken = Annotated[str | None, Cookie(alias=SESSION_COOKIE_NAME)]
@@ -40,6 +51,109 @@ async def hash_password_async(password: str) -> str:
 
 async def verify_password_async(password: str, password_hash: str) -> bool:
     return await run_in_threadpool(verify_password, password, password_hash)
+
+
+def _require_github_oauth_settings() -> tuple[str, str, str]:
+    settings = get_settings()
+    if (
+        not settings.github_client_id
+        or not settings.github_client_secret
+        or not settings.github_callback_url
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="GitHub OAuth is not configured",
+        )
+    return settings.github_client_id, settings.github_client_secret, settings.github_callback_url
+
+
+def _get_fernet() -> Fernet:
+    settings = get_settings()
+    key_bytes = hashlib.sha256(settings.session_secret.encode("utf-8")).digest()
+    return Fernet(base64.urlsafe_b64encode(key_bytes))
+
+
+def generate_github_oauth_state() -> str:
+    return secrets.token_urlsafe(16)
+
+
+def encrypt_github_access_token(access_token: str) -> str:
+    return _get_fernet().encrypt(access_token.encode("utf-8")).decode("utf-8")
+
+
+def decrypt_github_access_token(encrypted_token: str) -> str:
+    return _get_fernet().decrypt(encrypted_token.encode("utf-8")).decode("utf-8")
+
+
+def get_github_oauth_url(state: str) -> str:
+    client_id, _, callback_url = _require_github_oauth_settings()
+    params = httpx.QueryParams(
+        {
+            "client_id": client_id,
+            "redirect_uri": callback_url,
+            "scope": GITHUB_OAUTH_SCOPE,
+            "state": state,
+        }
+    )
+    return f"{GITHUB_AUTHORIZE_URL}?{params}"
+
+
+async def exchange_code_for_token(code: str) -> str:
+    client_id, client_secret, callback_url = _require_github_oauth_settings()
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                GITHUB_ACCESS_TOKEN_URL,
+                headers={"Accept": "application/json"},
+                data={
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                    "code": code,
+                    "redirect_uri": callback_url,
+                },
+            )
+            response.raise_for_status()
+    except httpx.HTTPError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="GitHub OAuth failed",
+        ) from exc
+
+    payload = response.json()
+    access_token = payload.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="GitHub OAuth failed")
+
+    return access_token
+
+
+async def get_github_user(access_token: str) -> dict[str, int | str]:
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(
+                GITHUB_USER_URL,
+                headers={
+                    "Accept": "application/json",
+                    "Authorization": f"Bearer {access_token}",
+                },
+            )
+            response.raise_for_status()
+    except httpx.HTTPError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="GitHub OAuth failed",
+        ) from exc
+
+    payload = response.json()
+    github_id = payload.get("id")
+    github_login = payload.get("login")
+    if not github_id or not github_login:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="GitHub OAuth failed")
+
+    return {
+        "id": github_id,
+        "login": github_login,
+    }
 
 
 def create_jwt(user_id: uuid.UUID | str) -> str:

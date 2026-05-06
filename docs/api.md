@@ -2,7 +2,7 @@
 
 Base URL: `http://localhost:8000` (dev) / `https://your-domain.com` (prod)
 
-Все эндпоинты, кроме `/health`, `/auth/register`, `/auth/login`, `/auth/github/callback` и `POST /webhook/{project_id}`, требуют авторизации через JWT-cookie (`session`).
+Все эндпоинты, кроме `/health`, `/auth/register`, `/auth/login` и `POST /webhook/{project_id}`, требуют авторизации через JWT-cookie (`session`).
 
 ---
 
@@ -151,7 +151,7 @@ https://github.com/login/oauth/authorize?client_id=...&scope=repo&state=...
 
 ### GET /auth/github/callback
 
-Обработка callback от GitHub после подтверждения OAuth.
+Обработка callback от GitHub после подтверждения OAuth. Требует активной сессии и корректного `state` из cookie.
 
 **Query params:**
 - `code` — код авторизации от GitHub
@@ -161,14 +161,16 @@ https://github.com/login/oauth/authorize?client_id=...&scope=repo&state=...
 1. Обменять `code` на `access_token`
 2. Получить профиль: `GET https://api.github.com/user`
 3. Обновить текущего пользователя: сохранить `github_id`, `github_login`, `github_access_token`
-4. Редирект на профиль
+4. Редирект на страницу настроек
 
-**Response 302** — редирект на `http://localhost:3000/profile`
+**Response 302** — редирект на `${FRONTEND_BASE_URL}/settings`
 
 **Response 409** — этот GitHub-аккаунт уже привязан к другому пользователю:
 ```json
 { "detail": "GitHub account already linked to another user" }
 ```
+
+**Response 401** — нет валидной `session` cookie.
 
 ---
 
