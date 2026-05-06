@@ -1,6 +1,9 @@
 from fastapi import FastAPI
+from slowapi.errors import RateLimitExceeded
+from slowapi.extension import _rate_limit_exceeded_handler
 
 from app.api.router import api_router
+from app.api.routes.auth import limiter
 from app.core.config import get_settings
 
 
@@ -12,6 +15,8 @@ def create_app() -> FastAPI:
         debug=settings.debug,
         version="0.1.0",
     )
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
     app.include_router(api_router)
     return app
 

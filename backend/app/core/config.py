@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,6 +27,31 @@ class Settings(BaseSettings):
     api_key: str | None = Field(default=None, alias="API_KEY")
     base_url: str | None = Field(default=None, alias="BASE_URL")
     model: str | None = Field(default=None, alias="MODEL")
+    app_base_url: str = Field(default="http://localhost:8000", alias="APP_BASE_URL")
+
+    @field_validator("debug", mode="before")
+    @classmethod
+    def validate_debug(cls, v: bool | str) -> bool:
+        if isinstance(v, bool):
+            return v
+
+        normalized = str(v).strip().lower()
+        true_values = {"1", "true", "yes", "on", "debug", "dev", "development", "local"}
+        false_values = {"0", "false", "no", "off", "release", "prod", "production"}
+
+        if normalized in true_values:
+            return True
+        if normalized in false_values:
+            return False
+
+        raise ValueError("DEBUG must be a boolean or one of: dev/debug/release/prod")
+
+    @field_validator("session_secret")
+    @classmethod
+    def validate_session_secret(cls, v: str) -> str:
+        if len(v) < 32:
+            raise ValueError("SESSION_SECRET must be at least 32 characters long")
+        return v
 
     @property
     def sqlalchemy_database_url(self) -> str:

@@ -1,8 +1,13 @@
 import os
+import secrets
+
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
+
+os.environ["DEBUG"] = "true"
 
 from app.db.base import Base
 from app.db.session import get_db_session
@@ -17,7 +22,7 @@ TEST_DATABASE_URL = os.getenv(
 @pytest.fixture(scope="session")
 async def engine():
     """Создаёт все таблицы один раз на сессию, удаляет после всех тестов."""
-    engine = create_async_engine(TEST_DATABASE_URL, pool_pre_ping=True)
+    engine = create_async_engine(TEST_DATABASE_URL, pool_pre_ping=True, poolclass=NullPool)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield engine
@@ -32,6 +37,7 @@ async def db_session(engine):
     session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     async with session_factory() as session:
         yield session
+        await session.rollback()
         # Очистить данные после теста, сохранив схему
         if Base.metadata.sorted_tables:
             table_names = ", ".join(t.name for t in Base.metadata.sorted_tables)
@@ -44,6 +50,11 @@ async def client(db_session: AsyncSession):
     """HTTP-клиент с подменённой БД-сессией. Не аутентифицирован."""
     async def override_get_db():
         yield db_session
+
+    limiter = getattr(app.state, "limiter", None)
+    storage = getattr(limiter, "_storage", None)
+    if storage is not None and hasattr(storage, "reset"):
+        storage.reset()
 
     app.dependency_overrides[get_db_session] = override_get_db
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
@@ -82,7 +93,6 @@ async def auth_client(client: AsyncClient, test_user):
 @pytest.fixture
 async def test_project(db_session: AsyncSession, test_user):
     """Создаёт тестовый проект. Доступен после Этапа 1+5."""
-    import secrets
     from app.models.project import Project
 
     project = Project(

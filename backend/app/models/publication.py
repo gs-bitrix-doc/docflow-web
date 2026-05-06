@@ -32,6 +32,19 @@ class Publication(Base):
     task: Mapped[Task] = relationship(back_populates="publications")
     publisher: Mapped[User] = relationship(foreign_keys=[published_by])
 
+    @property
+    def file_path(self) -> str | None:
+        return self.task.file_path if self.task else None
+
+    @property
+    def source_repo(self) -> str | None:
+        project = self.task.project if self.task else None
+        return project.source_repo if project else None
+
+    @property
+    def commit_url(self) -> str:
+        return f"https://github.com/{self.target_repo}/commit/{self.commit_sha}"
+
     __table_args__ = (
         Index("idx_publications_task_id", "task_id"),
         Index("idx_publications_published_by", "published_by"),

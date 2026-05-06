@@ -27,10 +27,13 @@ class User(Base):
     last_login_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
-        onupdate=func.now(),
     )
 
     projects: Mapped[list[Project]] = relationship(back_populates="user")
+
+    @property
+    def github_linked(self) -> bool:
+        return self.github_id is not None
 
     __table_args__ = (
         Index(

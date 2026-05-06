@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ARRAY, DateTime, ForeignKey, Index, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core.config import get_settings
 from app.db.base import Base
 
 if TYPE_CHECKING:
@@ -30,5 +31,10 @@ class Project(Base):
 
     user: Mapped[User] = relationship(back_populates="projects")
     tasks: Mapped[list[Task]] = relationship(back_populates="project")
+
+    @property
+    def webhook_url(self) -> str:
+        base_url = get_settings().app_base_url.rstrip("/")
+        return f"{base_url}/webhook/{self.id}"
 
     __table_args__ = (Index("idx_projects_user_id", "user_id"),)

@@ -27,26 +27,58 @@
 
 ## Запуск
 
-```bash
-# Поднять тестовую БД (один раз)
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up db_test -d
+### Через скрипт (рекомендуется)
 
-# Все тесты
-cd backend
-python -m pytest
+Скрипты сами поднимают `db_test`, ждут готовности Postgres и запускают pytest через `backend/.venv`.
+Произвольные аргументы передаются прямо в pytest.
 
-# Конкретный файл
-python -m pytest tests/test_auth.py -v
-
-# Конкретный тест
-python -m pytest tests/test_auth.py::test_login_success -v
-
-# С выводом print()
-python -m pytest -s
-
-# Остановиться на первом падении
-python -m pytest -x
+**Windows PowerShell** (основной вариант):
+```powershell
+# Из корня репозитория
+.\scripts\test.ps1
+.\scripts\test.ps1 tests/test_auth.py -v
+.\scripts\test.ps1 tests/test_auth.py::test_login_success -v
+.\scripts\test.ps1 -x
+.\scripts\test.ps1 -s -k "test_login"
 ```
+
+> Если PowerShell блокирует запуск скриптов: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
+
+**Git Bash / Linux / macOS:**
+```bash
+./scripts/test.sh
+./scripts/test.sh tests/test_auth.py -v
+./scripts/test.sh -x -k "test_login"
+```
+
+---
+
+### Вручную (если db_test уже запущен)
+
+Запускать из директории `backend/` — там лежит `pyproject.toml` с настройками pytest.
+
+**Вариант A — через активированный venv:**
+```bash
+cd backend
+source .venv/Scripts/activate   # Windows (Git Bash)
+# или: source .venv/bin/activate   # Linux / macOS
+
+pytest                           # все тесты
+pytest tests/test_auth.py -v
+pytest -x -s
+```
+
+**Вариант B — без активации venv, явный путь к Python:**
+```bash
+# Windows
+backend\.venv\Scripts\python -m pytest backend/tests
+
+# Linux / macOS
+backend/.venv/bin/python -m pytest backend/tests
+```
+
+> `python -m pytest` без явного venv запускает системный Python — тесты упадут
+> из-за отсутствия зависимостей. Всегда используйте venv.
 
 ---
 

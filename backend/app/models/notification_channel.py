@@ -30,6 +30,14 @@ class NotificationChannel(Base):
 
     creator: Mapped[User] = relationship(foreign_keys=[created_by])
 
+    @property
+    def destination_label(self) -> str:
+        if self.method == "incoming_webhook":
+            return "incoming webhook"
+        if self.destination_type and self.destination_id:
+            return f"{self.destination_type} · {self.destination_id}"
+        return self.method
+
     __table_args__ = (
         Index(
             "idx_notification_channels_active", "is_active",

@@ -16,7 +16,10 @@ RUN pip install --no-cache-dir -e ./backend/
 
 COPY backend/migrations/ ./backend/migrations/
 COPY backend/alembic.ini ./backend/
+COPY backend/entrypoint.sh ./backend/entrypoint.sh
+RUN chmod +x ./backend/entrypoint.sh
 
 WORKDIR /app/backend
 
+ENTRYPOINT ["./entrypoint.sh"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
