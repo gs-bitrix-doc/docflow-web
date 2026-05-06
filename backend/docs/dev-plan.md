@@ -189,9 +189,14 @@ CRUD для проектов.
 
 **SSE (`GET /tasks/{id}/events`):**
 - `StreamingResponse` с `media_type="text/event-stream"`
-- Пока `status == "running"` — стримить из очереди события `stage_update`, `log_line`
-- При смене статуса — отправить `status_change` и закрыть поток
-- Формат: `event: log_line\ndata: {"line": "..."}\n\n`
+- Связь runner ↔ SSE через глобальный `dict[UUID, asyncio.Queue]` в `pipeline_runner.py`:
+  - при старте runner создаёт `Queue` и кладёт в словарь по `task_id`
+  - SSE-эндпоинт достаёт очередь из словаря и читает из неё
+  - runner кладёт в очередь события `{"event": "log_line", "data": {...}}` построчно
+  - по завершении кладёт `{"event": "status_change", "data": {"status": "done"}}` и `None` как sentinel
+  - SSE читает до `None`, затем закрывает поток и удаляет очередь из словаря
+- Формат каждого события: `event: log_line\ndata: {"line": "..."}\n\n`
+- Если клиент подключился когда задача уже завершена (нет очереди) — сразу отправить `status_change` с текущим статусом
 
 ---
 
@@ -206,6 +211,8 @@ CRUD для проектов.
 - `GET /tasks/{id}/log` — сырой лог (text/plain)
 - `PATCH /tasks/{id}` — обновить `translated_content` (только `done` / `failed`)
 - `POST /tasks/manual` — ручной запуск (вариант A: файл из репо, вариант B: upload)
+  - `github_ref` для ручных задач: хранить строку `"manual"` (поле NOT NULL, реального ref нет)
+  - `github_sha = null`, `source_file_sha = null` для загружаемых файлов
 - `POST /tasks/{id}/retry` — повторный запуск; если SHA source изменился — 409, иначе сброс и старт
 
 ---
@@ -234,9 +241,24 @@ CRUD для проектов.
 - `app/api/routes/history.py` — `GET /history`
 - `app/api/routes/analytics.py` — `GET /analytics`
 
+**Модель доступа к History:**
+
+Пользователь видит публикации по всем проектам, у которых совпадает `source_repo` с его собственными проектами. Это позволяет команде, работающей над одним репозиторием, видеть общую историю — без явного шаринга проектов и без дополнительных таблиц.
+
+```
+Видимые публикации = publications
+  JOIN tasks ON tasks.id = publications.task_id
+  JOIN projects ON projects.id = tasks.project_id
+  WHERE projects.source_repo IN (
+    SELECT source_repo FROM projects WHERE user_id = current_user.id
+  )
+```
+
+Фильтр `project_id` в query params работает по той же логике — только если этот `project_id` относится к одному из видимых репозиториев.
+
 **Детали:**
-- History: JOIN `publications → tasks → projects`, фильтры по `project_id`, `published_by`, диапазону дат
-- Analytics: агрегирующие SQL-запросы через SQLAlchemy — `count()`, `avg()`, `group by date`
+- History: JOIN `publications → tasks → projects`, фильтры по `project_id`, `published_by`, диапазону дат; сортировка по `published_at DESC`
+- Analytics: агрегирующие SQL-запросы через SQLAlchemy — `count()`, `avg()`, `group by date`; видимость по той же логике `source_repo IN (...)`
 
 ---
 
