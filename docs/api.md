@@ -294,6 +294,7 @@ https://github.com/login/oauth/authorize?client_id=...&scope=repo&state=...
 ### POST /webhook/{project_id}
 
 Приём `push`-события от GitHub. Запрос отправляется автоматически при пуше в source repo.
+`ping`-событие от GitHub используется для проверки webhook и возвращает `200 { "ok": true }`.
 
 **Headers:**
 ```
@@ -307,12 +308,15 @@ Content-Type: application/json
 2. Верифицировать HMAC-подпись с использованием `project.webhook_secret`
 3. Проверить, что `ref` совпадает с `project.source_branch`
 4. Собрать все `.md`-файлы из `commits[*].added` + `commits[*].modified`
-5. Для каждого файла:
+5. Убедиться, что у владельца проекта есть действующая GitHub-привязка
+6. Для каждого файла:
    - Скачать содержимое через GitHub API с токеном владельца проекта
    - Получить `source_file_sha` (SHA blob RU-файла)
    - Получить `target_file_sha` (SHA blob EN-файла в target repo; `null` если не существует)
-   - Создать `Task` со статусом `queued`
-6. Запустить фоновый перевод каждой задачи
+   - Создать `Task` со статусом `queued`, `github_ref = payload.ref`, `github_sha = payload.after`, `commit_message = payload.head_commit.message`
+7. Запустить фоновый перевод каждой задачи
+
+> Если хотя бы один файл не удалось скачать из GitHub, webhook обрабатывается атомарно: новые задачи не создаются вообще.
 
 **Response 202:**
 ```json
@@ -339,12 +343,19 @@ Content-Type: application/json
 { "detail": "No translatable files in this push" }
 ```
 
+**Response 400** — у владельца проекта нет GitHub-привязки:
+```json
+{ "detail": "GitHub account is not linked" }
+```
+
 **Response 403** — неверная HMAC-подпись:
 ```json
 { "detail": "Invalid webhook signature" }
 ```
 
 **Response 404** — проект не найден.
+
+**Response 502** — GitHub API не дал скачать хотя бы один нужный файл.
 
 ---
 

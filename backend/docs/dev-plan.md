@@ -192,27 +192,32 @@ CRUD для проектов.
 **Методы:**
 - `get_file_content(repo, path, ref) → (content: str, sha: str)` — скачать файл и его blob SHA
 - `get_file_sha(repo, path, ref) → str | None` — только SHA (для проверки конфликтов)
-- `get_repo_tree(repo, ref, path) → list[str]` — список `.md`-файлов (для file browser)
+- `get_repo_tree(repo, ref, path) → list[str]` — рекурсивный список `.md`-файлов (для file browser)
 - `create_or_update_file(repo, path, message, content, sha | None, branch) → commit_sha` — публикация
 - `get_user_repos() → list[str]` — список репозиториев для выбора при создании проекта
 
 **Детали:**
-- `httpx.AsyncClient` с `Authorization: token {access_token}` header
+- `httpx.AsyncClient` с `Authorization` header на основе access token пользователя
 - `base_url = "https://api.github.com"`
 - Обернуть HTTP ошибки в кастомный `GitHubAPIError(status_code, detail)`
 - Контент файлов приходит base64-encoded — декодировать
+- Markdown-файлы считать только `utf-8`, без попыток угадывать кодировку
 
 **Безопасность:**
 - Всегда использовать `base_url = "https://api.github.com"` — не принимать URL от пользователя (защита от SSRF)
 - Не логировать `access_token` — в логах может появиться в traceback при ошибке. Перехватывать исключения до логирования и вырезать заголовок `Authorization`
-- `get_user_repos()` — возвращать только репозитории текущего пользователя, не принимать произвольный `owner` от клиента
+- `get_user_repos()` — возвращать все доступные пользователю репозитории (включая org/private), не принимать произвольный `owner` от клиента
+- `get_user_repos()` — не возвращать archived-репозитории
 
 **Тесты (TDD — `pytest-mock` мокает httpx, `respx` или `mocker.patch`):**
 
 `tests/services/test_github_client.py`:
 - `test_get_file_content_decodes_base64` — мокаем ответ GitHub, проверяем декодирование
+- `test_get_file_content_raises_on_invalid_utf8` — не-UTF-8 файл → ошибка клиента
 - `test_get_file_sha_returns_none_if_404` — 404 от GitHub → None (файл не существует)
+- `test_get_repo_tree_filters_markdown_recursively` — возвращаются только `.md` внутри нужного path
 - `test_create_or_update_file_sends_correct_payload` — проверяем тело запроса
+- `test_get_user_repos_returns_all_non_archived` — archived-репозитории отфильтрованы, org/private остаются
 - `test_github_api_error_raised_on_500` — GitHub вернул 500 → `GitHubAPIError`
 
 ---
@@ -229,11 +234,15 @@ CRUD для проектов.
 
 **Детали:**
 - Верификация HMAC: `hmac.compare_digest(expected, received)` по телу запроса и `project.webhook_secret`
+- `X-GitHub-Event: ping` возвращает `200 {"ok": true}`
 - Фильтр: только `X-GitHub-Event: push` и только коммиты в `project.source_branch`
 - Собрать все `.md` из `commits[*].added` + `commits[*].modified`, дедуплицировать
 - Применить `exclude_patterns` (использовать `pathspec` или ручной fnmatch)
 - Дедупликация: если файл уже в `queued` или `running` задаче — добавить в `skipped`
+- Для webhook нужен привязанный GitHub-аккаунт владельца проекта, иначе 400
 - Для каждого нового файла: скачать через `GitHubClient`, создать `Task(status="queued")`
+- `Task` из webhook заполняется так: `github_ref = payload.ref`, `github_sha = payload.after`, `commit_message = payload.head_commit.message`
+- Если хотя бы один файл не удалось скачать из GitHub, webhook обрабатывается атомарно: задачи не создаются совсем
 - Запустить `pipeline_runner.run_task(task_id)` как FastAPI `BackgroundTask`
 - Ответ 202 с `{created, task_ids, skipped}`
 
@@ -250,6 +259,7 @@ CRUD для проектов.
 - `test_hmac_timing_safe` — разные длины подписей не дают утечки по времени
 
 `tests/test_webhook.py` (integration):
+- `test_webhook_ping_event` — ping → 200
 - `test_webhook_creates_tasks` — валидный push → 202, задачи созданы в БД
 - `test_webhook_invalid_signature` — 403
 - `test_webhook_wrong_branch` — push в не-source ветку → 400
@@ -257,6 +267,8 @@ CRUD для проектов.
 - `test_webhook_deduplication_queued` — файл уже в `queued` → в `skipped`
 - `test_webhook_exclude_patterns` — файл совпадает с паттерном → пропущен
 - `test_webhook_multiple_files` — 3 файла → 3 задачи
+- `test_webhook_requires_github_link` — без GitHub-link владельца webhook отклоняется
+- `test_webhook_is_atomic_if_github_download_fails` — при ошибке GitHub API задачи не создаются
 
 ---
 
