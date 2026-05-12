@@ -1,0 +1,14 @@
+.root {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.main {
+  min-width: 0;
+}
+
+.content {
+  max-width: var(--content-max);
+  padding: var(--content-pad-top) var(--content-pad-x) var(--content-pad-bottom);
+}

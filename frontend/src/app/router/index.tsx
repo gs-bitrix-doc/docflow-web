@@ -11,6 +11,7 @@ import SettingsPage from '@/pages/SettingsPage'
 import PageInDevelopmentPage from '@/pages/PageInDevelopmentPage'
 import { DevShowcasePage } from '@/pages/DevShowcasePage'
 import i18n from '@/shared/lib/i18n'
+import { AppLayout } from '../layouts/AppLayout'
 import { ProtectedRoute } from '../auth/ProtectedRoute'
 import { PublicRoute } from '../auth/PublicRoute'
 
@@ -44,60 +45,41 @@ const router = createBrowserRouter([
     element: <PageInDevelopmentPage title={i18n.t('common:privacy_title')} />,
   },
   {
-    path: '/tasks',
     element: (
       <ProtectedRoute>
-        <TaskListPage />
+        <AppLayout />
       </ProtectedRoute>
     ),
-  },
-  {
-    path: '/tasks/:taskId',
-    element: (
-      <ProtectedRoute>
-        <TaskDetailPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/repositories',
-    element: (
-      <ProtectedRoute>
-        <RepositoriesPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/analytics',
-    element: (
-      <ProtectedRoute>
-        <AnalyticsPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/history',
-    element: (
-      <ProtectedRoute>
-        <HistoryPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/dictionaries',
-    element: (
-      <ProtectedRoute>
-        <DictionariesPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/settings',
-    element: (
-      <ProtectedRoute>
-        <SettingsPage />
-      </ProtectedRoute>
-    ),
+    children: [
+      {
+        path: '/tasks',
+        element: <TaskListPage />,
+      },
+      {
+        path: '/tasks/:taskId',
+        element: <TaskDetailPage />,
+      },
+      {
+        path: '/repositories',
+        element: <RepositoriesPage />,
+      },
+      {
+        path: '/analytics',
+        element: <AnalyticsPage />,
+      },
+      {
+        path: '/history',
+        element: <HistoryPage />,
+      },
+      {
+        path: '/dictionaries',
+        element: <DictionariesPage />,
+      },
+      {
+        path: '/settings',
+        element: <SettingsPage />,
+      },
+    ],
   },
   {
     path: '/dev',

@@ -25,7 +25,7 @@ describe('axiosBaseQuery', () => {
     const result = await baseQuery(
       { url: '/test-success' },
       { dispatch: store.dispatch } as never,
-      undefined,
+      {},
     )
 
     expect(result).toEqual({
@@ -87,7 +87,7 @@ describe('axiosBaseQuery', () => {
       },
     })
 
-    await baseQuery({ url: '/test-401' }, { dispatch: store.dispatch } as never, undefined)
+    await baseQuery({ url: '/test-401' }, { dispatch: store.dispatch } as never, {})
 
     expect(store.getState().auth.isAuthenticated).toBe(false)
     expect(assignMock).toHaveBeenCalledWith('/login')
