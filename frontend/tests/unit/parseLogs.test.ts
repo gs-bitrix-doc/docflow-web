@@ -43,4 +43,32 @@ describe('parseLogs', () => {
       },
     ])
   })
+
+  it('keeps backend logs without stage prefixes in the other group', () => {
+    const stages = parseLogs(['workspace created', 'chunk translated', 'saved output'].join('\n'))
+
+    expect(stages).toEqual([
+      {
+        id: 'other',
+        lines: ['workspace created', 'chunk translated', 'saved output'],
+      },
+    ])
+  })
+
+  it('groups live lines by the current SSE stage when logs have no prefixes', () => {
+    const stages = parseLogs('workspace created', ['chunk translated', 'chunk fixed'], {
+      liveStage: 'pipeline',
+    })
+
+    expect(stages).toEqual([
+      {
+        id: 'pipeline',
+        lines: ['chunk translated', 'chunk fixed'],
+      },
+      {
+        id: 'other',
+        lines: ['workspace created'],
+      },
+    ])
+  })
 })

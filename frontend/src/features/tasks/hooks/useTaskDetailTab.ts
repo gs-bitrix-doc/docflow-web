@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
+  getAvailableTaskDetailTabs,
   getDefaultTaskDetailTab,
   isTaskDetailTab,
   type TaskDetailTab,
@@ -12,7 +13,7 @@ export function useTaskDetailTab(status: TaskStatus) {
 
   const activeTab = useMemo(() => {
     const tabParam = searchParams.get('tab')
-    if (isTaskDetailTab(tabParam)) {
+    if (isTaskDetailTab(tabParam, status)) {
       return tabParam
     }
 
@@ -21,11 +22,14 @@ export function useTaskDetailTab(status: TaskStatus) {
 
   const setActiveTab = useCallback(
     (tab: TaskDetailTab) => {
+      const resolvedTab = getAvailableTaskDetailTabs(status).includes(tab)
+        ? tab
+        : getDefaultTaskDetailTab(status)
       const params = new URLSearchParams(searchParams)
-      params.set('tab', tab)
+      params.set('tab', resolvedTab)
       setSearchParams(params, { replace: true })
     },
-    [searchParams, setSearchParams],
+    [searchParams, setSearchParams, status],
   )
 
   return {

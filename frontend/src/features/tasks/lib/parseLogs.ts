@@ -34,17 +34,49 @@ function appendLine(
   groups.set(stageId, [line])
 }
 
-export function parseLogs(log: string | null, liveLines: string[] = []): ParsedTaskLogStage[] {
-  const allLines = [log ?? '', ...liveLines]
-    .join('\n')
-    .split('\n')
+function toLines(value: string | string[] | null | undefined) {
+  if (!value) {
+    return []
+  }
+
+  const items = Array.isArray(value) ? value : [value]
+  return items
+    .flatMap((item) => item.split('\n'))
     .map((line) => line.trimEnd())
     .filter((line) => line.trim().length > 0)
+}
 
+interface ParseLogsOptions {
+  liveStage?: TaskPipelineStage | null
+}
+
+export function parseLogs(
+  log: string | null,
+  liveLines: string[] = [],
+  options: ParseLogsOptions = {},
+): ParsedTaskLogStage[] {
   const groups = new Map<ParsedTaskLogStageId, string[]>()
   let currentStage: ParsedTaskLogStageId = 'other'
 
-  for (const line of allLines) {
+  for (const line of toLines(log)) {
+    const detectedStage = detectStage(line)
+
+    if (detectedStage) {
+      currentStage = detectedStage
+      const content = stripStagePrefix(line, detectedStage)
+      if (content.length > 0) {
+        appendLine(groups, detectedStage, content)
+      } else if (!groups.has(detectedStage)) {
+        groups.set(detectedStage, [])
+      }
+      continue
+    }
+
+    appendLine(groups, currentStage, line.trim())
+  }
+
+  currentStage = options.liveStage ?? currentStage
+  for (const line of toLines(liveLines)) {
     const detectedStage = detectStage(line)
 
     if (detectedStage) {

@@ -12,7 +12,12 @@ COPY pipeline/ ./pipeline/
 
 COPY backend/pyproject.toml ./backend/
 COPY backend/app/ ./backend/app/
-RUN pip install --no-cache-dir -e ./backend/
+RUN pip install --no-cache-dir \
+    "click>=8.3.1" \
+    "mistune>=3.2.0" \
+    "python-dotenv>=1.2.2" \
+    "requests>=2.33.0" \
+ && pip install --no-cache-dir -e ./backend/
 
 COPY backend/migrations/ ./backend/migrations/
 COPY backend/alembic.ini ./backend/

@@ -25,7 +25,7 @@ from app.services.history_analytics import (
 router = APIRouter(tags=["analytics"])
 DbSession = Annotated[AsyncSession, Depends(get_db_session)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
-ALL_TASK_STATUSES = ("queued", "running", "done", "failed", "published")
+ALL_TASK_STATUSES = ("queued", "running", "done", "failed", "published", "conflict")
 
 
 @router.get(

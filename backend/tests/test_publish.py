@@ -138,6 +138,7 @@ async def test_publish_conflict_detected(auth_client, db_session, test_project, 
 
     await db_session.refresh(task)
     assert task.status == "conflict"
+    assert task.target_file_sha == "new-target-sha"
     assert task.conflict_base == "# Source"
     assert task.conflict_ours == "# Target"
     assert task.conflict_theirs == "# Theirs"
@@ -180,6 +181,55 @@ async def test_publish_conflict_task_success_clears_snapshot(
     assert task.conflict_base is None
     assert task.conflict_ours is None
     assert task.conflict_theirs is None
+    notify.assert_awaited_once()
+
+
+async def test_publish_conflict_task_uses_updated_target_sha(
+    auth_client,
+    db_session,
+    test_project,
+    test_user,
+    mocker,
+):
+    await link_github(test_user, db_session)
+    task = await create_task(db_session, test_project, target_file_sha="stale-target-sha")
+
+    github_client = mocker.Mock()
+    github_client.get_file_sha = mocker.AsyncMock(
+        side_effect=["new-target-sha", "new-target-sha"]
+    )
+    github_client.get_file_content = mocker.AsyncMock(return_value=("# Theirs", "new-target-sha"))
+    github_client.create_or_update_file = mocker.AsyncMock(return_value="commit-sha")
+    mocker.patch("app.services.tasks.GitHubClient", return_value=github_client)
+    notify = mocker.patch("app.services.tasks.bitrix_notify.notify", new=mocker.AsyncMock())
+
+    first_response = await auth_client.post(f"/tasks/{task.id}/publish")
+
+    assert first_response.status_code == 409
+    await db_session.refresh(task)
+    assert task.status == "conflict"
+    assert task.target_file_sha == "new-target-sha"
+
+    patch_response = await auth_client.patch(
+        f"/tasks/{task.id}",
+        json={"translated_content": "# Resolved"},
+    )
+
+    assert patch_response.status_code == 200
+
+    second_response = await auth_client.post(f"/tasks/{task.id}/publish")
+
+    assert second_response.status_code == 200
+    assert second_response.json()["status"] == "published"
+
+    github_client.create_or_update_file.assert_awaited_once_with(
+        repo=test_project.target_repo,
+        path=task.file_path,
+        message="Publish translation: docs/index.md",
+        content="# Resolved",
+        sha="new-target-sha",
+        branch=test_project.target_branch,
+    )
     notify.assert_awaited_once()
 
 

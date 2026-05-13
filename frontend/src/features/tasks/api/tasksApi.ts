@@ -50,6 +50,7 @@ export const tasksApi = baseApi.injectEndpoints({
       query: (taskId) => ({
         url: `/tasks/${taskId}/log`,
       }),
+      providesTags: (_result, _error, taskId) => [{ type: 'TaskLog', id: taskId }],
     }),
     updateTask: builder.mutation<TaskDetail, { taskId: string; translated_content: string }>({
       query: ({ taskId, translated_content }) => ({

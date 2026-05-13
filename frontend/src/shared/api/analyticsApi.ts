@@ -1,13 +1,12 @@
 import { baseApi } from './baseApi'
 
 export interface AnalyticsStatsResponse {
-  total: number
-  running: number
-  done: number
-  failed: number
-  published: number
-  avg_duration_seconds: number | null
-  success_rate: number | null
+  total_tasks: number
+  success_rate: number
+  avg_duration_seconds: number
+  tasks_by_status: Record<string, number>
+  tasks_per_day: Array<{ date: string; count: number }>
+  top_errors: Array<{ error_type: string; count: number }>
 }
 
 function todayIso() {

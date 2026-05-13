@@ -577,6 +577,7 @@ async def publish_task(
                 project.target_branch,
             )
         task.status = "conflict"
+        task.target_file_sha = current_sha
         task.conflict_base = task.original_content
         task.conflict_ours = task.translated_content or ""
         task.conflict_theirs = theirs

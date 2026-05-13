@@ -31,18 +31,15 @@ export interface TaskDetail extends TaskSummary {
   conflict_base: string | null
   conflict_ours: string | null
   conflict_theirs: string | null
-  log: string | null
   error: string | null
-  publications: Publication[]
+  publications: TaskPublication[]
 }
 
-export interface Publication {
+export interface TaskPublication {
   id: string
   target_repo: string
   target_path: string
   commit_sha: string
-  commit_url: string
-  published_by: { id: string; display_name: string; github_login: string }
   published_at: string
 }
 
@@ -97,8 +94,24 @@ export interface ParsedTaskLogStage {
   lines: string[]
 }
 
-export function isTaskDetailTab(value: string | null): value is TaskDetailTab {
-  return value === 'diff' || value === 'logs' || value === 'conflict'
+export function getAvailableTaskDetailTabs(status: TaskStatus): TaskDetailTab[] {
+  if (status === 'conflict') {
+    return TASK_DETAIL_TABS
+  }
+
+  return TASK_DETAIL_TABS.filter((tab) => tab !== 'conflict')
+}
+
+export function isTaskDetailTab(value: string | null, status?: TaskStatus): value is TaskDetailTab {
+  if (value !== 'diff' && value !== 'logs' && value !== 'conflict') {
+    return false
+  }
+
+  if (!status) {
+    return true
+  }
+
+  return getAvailableTaskDetailTabs(status).includes(value)
 }
 
 export function getDefaultTaskDetailTab(status: TaskStatus): TaskDetailTab {

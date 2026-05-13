@@ -105,10 +105,12 @@
     "pipeline": "Pipeline",
     "persist": "Сохранение",
     "other": "Прочее",
-    "running": "Выполнение"
+    "running": "Выполнение",
+    "stage_running": "выполняется..."
   },
   "diff": {
     "save": "Сохранить",
+    "save_success": "Изменения сохранены",
     "discard": "Отменить",
     "download": "Скачать .md"
   },
@@ -118,17 +120,50 @@
   },
   "conflict": {
     "use_ours": "Использовать наш перевод",
-    "use_theirs": "Использовать текущий EN"
+    "use_theirs": "Использовать текущий EN",
+    "col_base_role": "База",
+    "col_base_sub": "RU оригинал",
+    "col_base_meta": "Исходная версия для сравнения",
+    "col_ours_role": "Наш перевод",
+    "col_ours_sub": "EN из пайплайна",
+    "col_ours_meta": "Черновик DocFlow",
+    "col_theirs_role": "Текущая версия",
+    "col_theirs_sub": "в репозитории",
+    "col_theirs_meta": "Актуальный EN-файл",
+    "editor_hint": "Внесите правки и опубликуйте итоговую версию"
   },
   "queued": {
-    "starts_in": "начнётся через ~{{seconds}} с"
+    "starts_in": "начнётся через ~{{seconds}} с",
+    "title": "Перевод в очереди",
+    "description": "Задача стартует, как только освободится воркер пайплайна."
   },
   "published_label": "Опубликовано",
+  "no_repository": "Без репозитория",
+  "not_found_title": "Задача не найдена",
+  "not_found_description": "Запись не найдена",
+  "empty_logs_title": "Логи пока пусты",
+  "empty_logs_description": "Пайплайн ещё не записал ни одной строки или задача только что создана.",
+  "publish_conflict": {
+    "title": "Конфликт публикации",
+    "description": "Во время публикации текущий EN-файл изменился в репозитории. Откройте вкладку «{{tab}}» и соберите итоговую версию.",
+    "open_conflict": "Открыть вкладку конфликта",
+    "close": "Закрыть"
+  },
   "retry_conflict": {
     "title": "Source-файл изменился в GitHub",
     "body": "Файл был изменён в репозитории после создания задачи.",
+    "file_changed": "Файл <code>{{filePath}}</code>{{repoText}} был изменён после создания задачи.",
+    "in_repo": " в репозитории {{repo}}",
+    "sha_old": "old: {{sha}}",
+    "sha_new": "new: {{sha}}",
     "create_new": "Создать новую задачу",
-    "use_old": "Перевести старую версию"
+    "use_old": "Перевести старую версию",
+    "cancel": "Отмена",
+    "open_existing": "Для этого файла уже есть активная задача. Открываю её.",
+    "create_failed": "Не удалось создать новую задачу для этого файла."
+  },
+  "unsaved_changes": {
+    "confirm_navigation": "Есть несохранённые изменения. Покинуть страницу?"
   },
   "units": {
     "seconds": "с",

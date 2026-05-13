@@ -60,9 +60,6 @@ export function useSSE({
     source.addEventListener('log_line', handleLogLine as EventListener)
     source.addEventListener('stage_update', handleStageUpdate as EventListener)
     source.addEventListener('status_change', handleStatusChange as EventListener)
-    source.onerror = () => {
-      closeSource()
-    }
 
     return () => {
       source.removeEventListener('log_line', handleLogLine as EventListener)
