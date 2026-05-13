@@ -13,7 +13,7 @@ export function EmptyState({ icon: Icon = Inbox, title, description, actions }: 
   return (
     <section className={styles.root}>
       <span className={styles.icon}>
-        <Icon size={32} />
+        <Icon size={48} />
       </span>
       <div className={styles.title}>{title}</div>
       {description && <div className={styles.description}>{description}</div>}

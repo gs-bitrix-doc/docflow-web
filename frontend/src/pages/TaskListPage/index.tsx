@@ -1,7 +1,5 @@
-import { useTranslation } from 'react-i18next'
+import { TaskListPage as TaskListPageView } from '@/features/tasks/ui/task-list'
 
 export default function TaskListPage() {
-  const { t } = useTranslation('tasks')
-
-  return <div>{t('title')}</div>
+  return <TaskListPageView />
 }

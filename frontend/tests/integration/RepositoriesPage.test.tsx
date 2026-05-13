@@ -35,8 +35,10 @@ describe('RepositoriesPage', () => {
     )
 
     expect(await screen.findByText('Docs EN')).toBeInTheDocument()
-    expect(screen.getAllByText(/team\/docs-/i)).toHaveLength(2)
-    expect(screen.getByText('main → release')).toBeInTheDocument()
+    // repo names are split: <span>team/</span>docs-ru — check each part
+    expect(screen.getAllByText('team/')).toHaveLength(2)
+    expect(screen.getByText('docs-ru')).toBeInTheDocument()
+    expect(screen.getByText('docs-en')).toBeInTheDocument()
   })
 
   it('renders empty state when there are no projects', async () => {

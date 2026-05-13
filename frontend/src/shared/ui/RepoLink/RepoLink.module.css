@@ -2,22 +2,41 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--text-muted);
+  color: var(--text);
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 500;
   transition:
     color var(--transition-fast),
-    transform var(--transition-fast);
+    text-decoration-color var(--transition-fast);
 }
 
 .root:hover {
-  color: var(--text);
+  color: #fff;
   text-decoration: underline;
-  transform: translateY(-1px);
+  text-decoration-color: rgba(255, 255, 255, 0.3);
+  text-underline-offset: 3px;
+}
+
+.label {
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.owner,
+.slash {
+  color: var(--text-path-dim);
 }
 
 .icon {
   flex-shrink: 0;
   color: var(--text-faint);
+  transition:
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.root:hover .icon {
+  color: var(--text-dim);
+  transform: translateY(-1px);
 }

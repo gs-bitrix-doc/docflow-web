@@ -1,16 +1,8 @@
-import { AlertTriangle, CheckCircle, Clock, GitMerge, XCircle, type LucideIcon } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { TaskStatus } from '@/features/tasks/model/types'
 import { cn } from '@/shared/lib/cn'
 import styles from './StatusPill.module.css'
-
-const STATUS_ICON: Partial<Record<TaskStatus, LucideIcon>> = {
-  queued: Clock,
-  done: CheckCircle,
-  failed: XCircle,
-  published: GitMerge,
-  conflict: AlertTriangle,
-}
 
 interface StatusPillProps {
   status: TaskStatus
@@ -19,17 +11,21 @@ interface StatusPillProps {
 
 export function StatusPill({ status, className }: StatusPillProps) {
   const { t } = useTranslation('tasks')
-  const Icon = STATUS_ICON[status]
+  const showIndicator = status === 'running' || status === 'conflict'
 
   return (
-    <span className={cn(styles.root, styles[status], className)}>
-      <span className={styles.iconSlot}>
-        {status === 'running' ? (
-          <span className={styles.pulseDot} />
-        ) : (
-          Icon && <Icon size={11} strokeWidth={2} />
-        )}
-      </span>
+    <span
+      className={cn(styles.root, styles[status], showIndicator && styles.withIndicator, className)}
+    >
+      {showIndicator ? (
+        <span className={styles.iconSlot}>
+          {status === 'running' ? (
+            <span className={styles.pulseDot} />
+          ) : (
+            <AlertTriangle size={11} strokeWidth={1.8} />
+          )}
+        </span>
+      ) : null}
       <span>{t(`status.${status}`)}</span>
     </span>
   )

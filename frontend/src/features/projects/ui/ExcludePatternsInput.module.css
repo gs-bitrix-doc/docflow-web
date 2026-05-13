@@ -1,44 +1,57 @@
 .root {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  min-height: 52px;
-  padding: 10px 12px;
+  gap: 5px;
+  padding: 7px 10px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
+  border-radius: 6px;
+  background: var(--bg);
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+  cursor: text;
 }
 
 .root:focus-within {
   border-color: var(--border-strong);
-  box-shadow: var(--shadow-focus);
+  background-color: #131313;
 }
 
 .error {
-  border-color: var(--danger);
+  border-color: rgba(217, 119, 87, 0.4);
 }
 
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  border-radius: var(--radius-full);
-  background: var(--surface-hover);
-  padding: 6px 10px;
+  gap: 5px;
+  background: #222222;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 7px 2px 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
   color: var(--text);
-  font-size: var(--font-size-xs);
 }
 
 .remove {
-  color: var(--text-dim);
+  color: var(--text-faint);
+  display: grid;
+  place-items: center;
+  transition: color 120ms ease;
+}
+
+.remove:hover {
+  color: var(--text);
 }
 
 .input {
   flex: 1;
-  min-width: 220px;
+  min-width: 160px;
   color: var(--text);
   font-family: var(--font-mono);
-  font-size: var(--font-size-xs);
+  font-size: 12px;
+  padding: 2px 4px;
 }
 
 .input::placeholder {

@@ -35,6 +35,10 @@ export interface ProjectWebhookSecretResponse {
   webhook_secret: string
 }
 
+export interface ProjectFilesResponse {
+  items: string[]
+}
+
 export type GithubRepo = string
 
 export interface ProjectTaskPreview {

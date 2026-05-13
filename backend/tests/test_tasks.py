@@ -32,18 +32,25 @@ async def create_task(
     log: str | None = None,
     error: str | None = None,
     completed_at: datetime | None = None,
+    commit_message: str | None = "Update docs",
+    commit_author_name: str | None = None,
+    commit_author_login: str | None = None,
+    current_stage: str | None = None,
 ) -> Task:
     task = Task(
         project_id=project.id,
         file_path=file_path,
         github_ref=github_ref,
         github_sha=github_sha,
-        commit_message="Update docs",
+        commit_message=commit_message,
+        commit_author_name=commit_author_name,
+        commit_author_login=commit_author_login,
         source_file_sha=source_file_sha,
         target_file_sha="target-sha",
         original_content="# Source",
         translated_content=translated_content,
         status=status,
+        current_stage=current_stage,
         log=log,
         error=error,
         completed_at=completed_at,
@@ -55,7 +62,14 @@ async def create_task(
 
 
 async def test_get_tasks_own_only(auth_client, db_session, test_project, test_user):
-    own_task = await create_task(db_session, test_project, file_path="docs/own.md")
+    own_task = await create_task(
+        db_session,
+        test_project,
+        file_path="docs/own.md",
+        commit_author_name="Anna Kuznetsova",
+        commit_author_login="anna-k",
+        current_stage="pipeline",
+    )
 
     other_user = User(
         email="other@example.com",
@@ -84,6 +98,10 @@ async def test_get_tasks_own_only(auth_client, db_session, test_project, test_us
     payload = response.json()
     assert payload["total"] == 1
     assert payload["items"][0]["id"] == str(own_task.id)
+    assert payload["items"][0]["project_name"] == test_project.name
+    assert payload["items"][0]["commit_author_name"] == "Anna Kuznetsova"
+    assert payload["items"][0]["commit_author_login"] == "anna-k"
+    assert payload["items"][0]["current_stage"] == "pipeline"
 
 
 async def test_get_tasks_without_project_filter_returns_all_own(
@@ -490,6 +508,40 @@ async def test_get_tasks_filter_by_status(auth_client, db_session, test_project)
     payload = response.json()
     assert payload["total"] == 1
     assert payload["items"][0]["status"] == "done"
+
+
+async def test_get_tasks_search_by_file_path(auth_client, db_session, test_project):
+    await create_task(db_session, test_project, file_path="docs/crm/deals.md")
+    await create_task(db_session, test_project, file_path="docs/catalog/products.md")
+
+    response = await auth_client.get("/tasks?search=deals")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total"] == 1
+    assert payload["items"][0]["file_path"] == "docs/crm/deals.md"
+
+
+async def test_get_tasks_search_by_commit_message(auth_client, db_session, test_project):
+    await create_task(
+        db_session,
+        test_project,
+        file_path="docs/a.md",
+        commit_message="Improve CRM deal docs",
+    )
+    await create_task(
+        db_session,
+        test_project,
+        file_path="docs/b.md",
+        commit_message="Fix analytics typo",
+    )
+
+    response = await auth_client.get("/tasks?search=crm")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total"] == 1
+    assert payload["items"][0]["commit_message"] == "Improve CRM deal docs"
 
 
 async def test_get_tasks_filter_by_foreign_project(auth_client, db_session):

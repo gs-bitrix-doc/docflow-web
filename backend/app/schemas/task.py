@@ -16,25 +16,30 @@ class TaskSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
-    project_id: UUID | None = Field(None, description="ID проекта; `null` для удалённых проектов (orphaned tasks)")
-    file_path: str = Field(..., description="Путь к файлу относительно корня репозитория, напр. `api-reference/crm/deals/crm-deal-get.md`")
-    status: TaskStatus = Field(..., description="Статус: `queued` → `running` → `done`/`failed` → `published`")
+    project_id: UUID | None = Field(None, description="Project ID; null for orphaned tasks")
+    project_name: str | None = Field(None, description="Project name for task list rows")
+    file_path: str = Field(..., description="Relative file path inside the repository")
+    github_sha: str | None = Field(None, description="GitHub commit SHA; null for manual tasks")
+    commit_message: str | None = Field(None, description="Commit message or manual label")
+    commit_author_name: str | None = Field(None, description="Git commit author display name")
+    commit_author_login: str | None = Field(None, description="GitHub login of the commit author")
+    status: TaskStatus = Field(..., description="Task status")
+    current_stage: str | None = Field(None, description="Current pipeline stage for running tasks")
     created_at: datetime
-    completed_at: datetime | None = Field(None, description="Когда перевод завершился статусом `done` или `failed`")
+    completed_at: datetime | None = Field(None, description="Completion time for done/failed tasks")
     updated_at: datetime
 
 
 class TaskDetail(TaskSummary):
     model_config = ConfigDict(from_attributes=True)
 
-    github_ref: str = Field(..., description="Git ref коммита, напр. `refs/heads/main`; `manual` для ручного запуска")
-    github_sha: str | None = Field(None, description="SHA коммита из push-события; `null` для ручного запуска")
-    source_file_sha: str | None = Field(None, description="Blob SHA RU-файла в source repo на момент создания задачи; `null` для upload-задач")
-    target_file_sha: str | None = Field(None, description="Blob SHA EN-файла в target repo на момент создания задачи; `null` если файл не существовал")
-    original_content: str = Field(..., description="Исходный RU текст файла")
-    translated_content: str | None = Field(None, description="Переведённый EN текст; `null` пока пайплайн не завершился")
-    error: str | None = Field(None, description="Traceback ошибки при `status=failed`; `null` в остальных случаях")
-    publications: list[PublicationRead] = Field(default_factory=list, description="История публикаций этой задачи")
+    github_ref: str = Field(..., description="Git ref; `manual` for manual tasks")
+    source_file_sha: str | None = Field(None, description="Source repository blob SHA")
+    target_file_sha: str | None = Field(None, description="Target repository blob SHA")
+    original_content: str = Field(..., description="Original source content")
+    translated_content: str | None = Field(None, description="Translated content")
+    error: str | None = Field(None, description="Pipeline traceback for failed tasks")
+    publications: list[PublicationRead] = Field(default_factory=list, description="Task publications")
 
 
 class TaskUpdate(BaseModel):
@@ -59,12 +64,12 @@ class SkippedFile(BaseModel):
     reason: SkippedReason = Field(
         ...,
         description=(
-            "`already_queued` — задача ждёт в очереди; "
-            "`pipeline_running` — пайплайн уже выполняется; "
-            "`excluded_by_pattern` — файл совпал с `exclude_patterns` проекта"
+            "`already_queued` - existing queued task; "
+            "`pipeline_running` - existing running task; "
+            "`excluded_by_pattern` - filtered by project exclude_patterns"
         ),
     )
-    existing_task_id: UUID | None = Field(None, description="ID существующей активной задачи; `null` для `excluded_by_pattern`")
+    existing_task_id: UUID | None = Field(None, description="Existing active task ID when available")
 
 
 class TaskCreateResponse(BaseModel):
@@ -80,15 +85,15 @@ class TaskPublishResponse(BaseModel):
 
     task_id: UUID
     status: Literal["published"]
-    commit_sha: str = Field(..., description="SHA коммита в target-репозитории")
-    target_repo: str = Field(..., description="Target-репозиторий в формате `owner/repo`")
-    target_path: str = Field(..., description="Путь к опубликованному файлу в target-репозитории")
+    commit_sha: str = Field(..., description="Commit SHA in the target repository")
+    target_repo: str = Field(..., description="Target repository in owner/repo format")
+    target_path: str = Field(..., description="Published path in the target repository")
 
 
 class RetryRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    force: bool = Field(False, description="Если `true` — перевести старую версию файла даже если source изменился в GitHub")
+    force: bool = Field(False, description="Retry even if the source file SHA changed")
 
 
 class ManualTaskFromRepo(BaseModel):

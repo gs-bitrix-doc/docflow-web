@@ -1,0 +1,20 @@
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 22px 14px 0;
+  color: var(--text-dim);
+  font-size: 12.5px;
+}
+
+.sha {
+  color: var(--text);
+  font-family: var(--font-mono);
+}
+
+.sep {
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: #2e2e2e;
+}

@@ -89,6 +89,7 @@ async def test_run_task_success(engine, db_session, test_project, mocker):
 
     assert updated_task is not None
     assert updated_task.status == "done"
+    assert updated_task.current_stage is None
     assert updated_task.translated_content == "# Translated"
     assert "pipeline log" in (updated_task.log or "")
     assert updated_task.error is None
@@ -134,6 +135,7 @@ async def test_run_task_failure_sets_failed_status(engine, db_session, test_proj
 
     assert updated_task is not None
     assert updated_task.status == "failed"
+    assert updated_task.current_stage is None
     assert updated_task.translated_content is None
     assert "RuntimeError: pipeline crashed" in (updated_task.error or "")
     assert "before failure" in (updated_task.log or "")
@@ -243,6 +245,11 @@ async def test_run_task_emits_sse_events(engine, db_session, test_project, mocke
     assert events[0]["data"]["stage"] == "prepare"
     assert events[1]["event"] == "stage_update"
     assert events[1]["data"]["stage"] == "pipeline"
+    assert any(
+        event["event"] == "stage_update" and event["data"]["stage"] == "persist"
+        for event in events
+        if event is not None
+    )
     assert any(event["event"] == "log_line" for event in events if event is not None)
     assert events[-2] == {"event": "status_change", "data": {"status": "done"}}
     assert events[-1] is None

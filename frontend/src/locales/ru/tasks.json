@@ -1,7 +1,18 @@
 {
   "title": "Задачи",
+  "subtitle": "Переводы по webhook и ручным запускам в одном списке.",
   "trigger_translation": "Запустить перевод",
   "search_placeholder": "Поиск по задачам, файлам, проектам…",
+  "project_unknown": "Проект без имени",
+  "running_now": "сейчас",
+  "download_missing": "У задачи пока нет переведённого контента для скачивания.",
+  "manual_group": "Ручной запуск",
+  "load_error_title": "Не удалось загрузить задачи",
+  "group": {
+    "files_one": "{{count}} файл",
+    "files_few": "{{count}} файла",
+    "files_many": "{{count}} файлов"
+  },
   "tabs": {
     "all": "Все",
     "queued": "В очереди",
@@ -17,5 +28,111 @@
     "failed": "ошибка",
     "published": "опубликовано",
     "conflict": "конфликт"
+  },
+  "stats": {
+    "running": "в работе",
+    "ready": "ждут публикации",
+    "failed": "ошибки",
+    "published": "опубликовано"
+  },
+  "toolbar": {
+    "select": "Выбрать",
+    "clear_selection": "Снять выбор",
+    "webhook_active": "webhook активен",
+    "webhook_waiting": "webhook ещё не приходил",
+    "project": "Проект",
+    "all_projects": "Все проекты",
+    "search_projects": "Найти проект…"
+  },
+  "banner": {
+    "new_tasks_one": "Появилась {{count}} новая задача",
+    "new_tasks_few": "Появилось {{count}} новые задачи",
+    "new_tasks_many": "Появилось {{count}} новых задач",
+    "refresh": "Обновить"
+  },
+  "actions": {
+    "download": "Скачать",
+    "publish": "Опубликовать",
+    "retry": "Повторить",
+    "resolve": "Разрешить",
+    "publish_all": "Опубликовать все",
+    "retry_success": "Задача поставлена в очередь повторно.",
+    "publish_success": "Перевод опубликован.",
+    "publish_group_success": "Опубликовано задач: {{count}}",
+    "publish_group_failed": "Не удалось опубликовать задач: {{count}}"
+  },
+  "batch": {
+    "selected_one": "Выбрана {{count}} задача",
+    "selected_few": "Выбрано {{count}} задачи",
+    "selected_many": "Выбрано {{count}} задач",
+    "selected_label": "задач выбрано",
+    "download": "Скачать",
+    "publish_ready": "Опубликовать готовые ({{count}})",
+    "publish_action": "Опубликовать готовые"
+  },
+  "empty": {
+    "no_github_title": "Подключите GitHub чтобы начать",
+    "no_github_description": "DocFlow отслеживает push в репозиториях и автоматически создаёт задачи на перевод изменённых .md файлов.",
+    "no_github_secondary": "Или переводите файлы без репозитория — загрузите .md файл напрямую.",
+    "link_github": "Привязать GitHub",
+    "upload_manual": "Загрузить файл вручную",
+    "no_tasks_title": "Пока нет задач",
+    "no_tasks_description": "Настройте webhook в проекте или запустите перевод вручную, чтобы появились первые задачи.",
+    "no_projects_title": "Сначала создайте проект",
+    "no_projects_description": "Для ручного запуска и webhook нужен хотя бы один проект с source и target репозиторием.",
+    "filtered_title": "По этим фильтрам задач нет",
+    "filtered_description": "Попробуйте изменить статус, проект или строку поиска.",
+    "reset_filters": "Сбросить фильтры",
+    "open_repositories": "Открыть репозитории"
+  },
+  "footer": {
+    "pipeline": "Пайплайн",
+    "last_webhook": "Последний webhook {{value}}",
+    "no_webhook": "Webhook ещё не приходил",
+    "count": "Показано {{visible}} из {{total}} задач"
+  },
+  "pipeline": {
+    "prepare": "Подготовка",
+    "pipeline": "Pipeline",
+    "persist": "Сохранение",
+    "running": "Выполнение"
+  },
+  "units": {
+    "seconds": "с",
+    "minutes": "мин",
+    "hours": "ч"
+  },
+  "trigger": {
+    "title": "Запустить перевод",
+    "repo_tab": "Из репозитория",
+    "upload_tab": "Загрузить файл",
+    "project_label": "Проект",
+    "path_label": "Путь к файлу или директории",
+    "path_placeholder": "docs/api/",
+    "repo_hint_idle": "Укажите путь в source-репозитории.",
+    "repo_hint_loading": "Ищем markdown-файлы…",
+    "repo_hint_found_one": "Найден {{count}} файл",
+    "repo_hint_found_few": "Найдено {{count}} файла",
+    "repo_hint_found_many": "Найдено {{count}} файлов",
+    "files_label": "Файлы для перевода",
+    "files_placeholder": "После выбора пути здесь появятся markdown-файлы из репозитория.",
+    "target_path_label": "Куда сохранить файл в проекте",
+    "target_path_placeholder": "docs/manual/new-page.md",
+    "file_label": "Markdown-файл",
+    "file_placeholder": "Выберите .md файл",
+    "source_language_label": "Исходный язык",
+    "target_language_label": "Целевой язык",
+    "submit": "Запустить",
+    "footer_hint": "Фронтенд создаёт задачи сразу в backend, дальше их подхватывает pipeline.",
+    "created_success_one": "Создана {{count}} задача",
+    "created_success_few": "Создано {{count}} задачи",
+    "created_success_many": "Создано {{count}} задач",
+    "skipped_notice_one": "Пропущена {{count}} задача",
+    "skipped_notice_few": "Пропущено {{count}} задачи",
+    "skipped_notice_many": "Пропущено {{count}} задач",
+    "skipped_section_title": "Не созданы",
+    "skipped_reason_already_queued": "Уже в очереди",
+    "skipped_reason_pipeline_running": "Пайплайн занят",
+    "skipped_reason_excluded_by_pattern": "Исключён паттерном"
   }
 }

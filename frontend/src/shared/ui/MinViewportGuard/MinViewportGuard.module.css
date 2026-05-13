@@ -9,10 +9,9 @@
   width: min(460px, 100%);
   padding: 28px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background:
-    radial-gradient(circle at top, rgba(120, 191, 255, 0.08), transparent 35%), var(--surface);
-  box-shadow: var(--shadow-dialog);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
 }
 
 .title {

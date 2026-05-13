@@ -5,7 +5,7 @@ import secrets
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,17 +15,40 @@ from app.models.user import User
 from app.schemas.project import (
     ProjectCreate,
     ProjectCreateResponse,
+    ProjectFilesResponse,
     ProjectRead,
     ProjectUpdate,
     ProjectWebhookSecretResponse,
 )
-from app.services.auth import encrypt_webhook_secret, get_current_user
+from app.services.auth import (
+    decrypt_github_access_token,
+    encrypt_webhook_secret,
+    get_current_user,
+)
+from app.services.github import GitHubClient
 from app.services.projects import ensure_github_linked, get_project_or_404
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 DbSession = Annotated[AsyncSession, Depends(get_db_session)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
 logger = logging.getLogger(__name__)
+
+
+def _validate_tree_path(path: str) -> str:
+    normalized = path.strip("/")
+    if not normalized:
+        return ""
+    if "\\" in normalized or normalized.startswith("/"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="path must be a forward-slash relative path",
+        )
+    if any(part in {"", ".", ".."} for part in normalized.split("/")):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="path must not contain '.' or '..' segments",
+        )
+    return normalized
 
 
 @router.get(
@@ -86,6 +109,35 @@ async def create_project(
     response.webhook_secret = plaintext_secret
     logger.info("project_created", extra={"project_id": str(project.id)})
     return response
+
+
+@router.get(
+    "/{project_id}/files",
+    response_model=ProjectFilesResponse,
+    summary="List project source files",
+    description="Возвращает markdown-файлы из source-репозитория проекта под указанным путём.",
+    responses={
+        200: {"description": "Список markdown-файлов"},
+        400: {"description": "GitHub не привязан или path невалиден"},
+        404: {"description": "Проект не найден"},
+    },
+)
+async def get_project_files(
+    project_id: UUID,
+    session: DbSession,
+    current_user: CurrentUser,
+    path: str = Query(default=""),
+) -> ProjectFilesResponse:
+    project = await get_project_or_404(session, project_id, current_user)
+    ensure_github_linked(current_user)
+    normalized_path = _validate_tree_path(path)
+    github_client = GitHubClient(decrypt_github_access_token(current_user.github_access_token))
+    items = await github_client.get_repo_tree(
+        project.source_repo,
+        project.source_branch,
+        normalized_path,
+    )
+    return ProjectFilesResponse(items=items)
 
 
 @router.get(

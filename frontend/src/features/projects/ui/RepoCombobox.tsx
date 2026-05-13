@@ -27,10 +27,7 @@ export function RepoCombobox({
 
   const normalizedValue = value.trim().toLowerCase()
   const filteredRepos = useMemo(() => {
-    if (!normalizedValue) {
-      return repos.slice(0, 8)
-    }
-
+    if (!normalizedValue) return repos.slice(0, 8)
     return repos.filter((repo) => repo.toLowerCase().includes(normalizedValue)).slice(0, 8)
   }, [normalizedValue, repos])
 
@@ -42,7 +39,6 @@ export function RepoCombobox({
         id={id}
         autoComplete="off"
         error={error}
-        inputClassName="mono"
         placeholder={placeholder}
         value={value}
         onBlur={() => {
@@ -56,20 +52,26 @@ export function RepoCombobox({
           {loading ? (
             <div className={styles.empty}>{t('repos_loading')}</div>
           ) : filteredRepos.length ? (
-            filteredRepos.map((repo) => (
-              <button
-                key={repo}
-                className={styles.option}
-                type="button"
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => {
-                  onChange(repo)
-                  setFocused(false)
-                }}
-              >
-                {repo}
-              </button>
-            ))
+            filteredRepos.map((repo) => {
+              const slash = repo.indexOf('/')
+              const owner = slash !== -1 ? repo.slice(0, slash + 1) : ''
+              const name = slash !== -1 ? repo.slice(slash + 1) : repo
+              return (
+                <button
+                  key={repo}
+                  className={styles.option}
+                  type="button"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => {
+                    onChange(repo)
+                    setFocused(false)
+                  }}
+                >
+                  <span className={styles.owner}>{owner}</span>
+                  <span>{name}</span>
+                </button>
+              )
+            })
           ) : (
             <div className={styles.empty}>{t('repos_empty')}</div>
           )}

@@ -1,5 +1,5 @@
 import * as Dialog from '@radix-ui/react-dialog'
-import { AlertTriangle, Copy } from 'lucide-react'
+import { Copy } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from '@/shared/ui/Toast/toast'
 import { translateApiError } from '@/shared/lib/errorMessages'
@@ -40,7 +40,20 @@ export function WebhookSecretModal({
 
           <div className={styles.body}>
             <div className={styles.warning}>
-              <AlertTriangle className={styles.warningIcon} size={18} />
+              <svg
+                className={styles.warningIcon}
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                width={14}
+                height={14}
+              >
+                <path d="M8 3l6 10H2L8 3z" />
+                <path d="M8 7v3" />
+                <circle cx="8" cy="12.5" r="0.5" fill="currentColor" />
+              </svg>
               <div className={styles.warningText}>
                 <strong>{t('secret_modal_warning')}</strong> {t('secret_modal_description')}
               </div>
@@ -48,55 +61,59 @@ export function WebhookSecretModal({
 
             <div className={styles.fieldGroup}>
               <div className={styles.fieldLabel}>{t('secret_label')}</div>
-              <div className={styles.fieldRow}>
+              <div className={styles.fieldBox}>
                 <input className={styles.fieldValue} readOnly value={webhookSecret} />
-                <Button
-                  className={styles.copyButton}
-                  iconLeft={<Copy size={14} />}
-                  variant="secondary"
+                <button
+                  type="button"
+                  className={styles.copyBtn}
                   onClick={() => {
                     void copyText(webhookSecret)
                       .then(() => toast.success(t('secret_copy_success')))
                       .catch((error) => toast.error(translateApiError(error)))
                   }}
                 >
+                  <Copy size={12} />
                   {t('copy_secret')}
-                </Button>
+                </button>
               </div>
             </div>
 
             <div className={styles.fieldGroup}>
               <div className={styles.fieldLabel}>{t('webhook_url_label')}</div>
-              <div className={styles.fieldRow}>
+              <div className={styles.fieldBox}>
                 <input className={styles.fieldValue} readOnly value={webhookUrl} />
-                <Button
-                  className={styles.copyButton}
-                  iconLeft={<Copy size={14} />}
-                  variant="secondary"
+                <button
+                  type="button"
+                  className={styles.copyBtn}
                   onClick={() => {
                     void copyText(webhookUrl)
                       .then(() => toast.success(t('url_copy_success')))
                       .catch((error) => toast.error(translateApiError(error)))
                   }}
                 >
+                  <Copy size={12} />
                   {t('copy_webhook_url')}
-                </Button>
+                </button>
               </div>
             </div>
 
-            <div className={styles.stepsTitle}>{t('webhook_steps_title')}</div>
-            <div className={styles.steps}>
-              {[1, 2, 3, 4, 5].map((step) => (
-                <div key={step} className={styles.step}>
-                  <div className={styles.stepNum}>{step}</div>
-                  <div className={styles.stepText}>{t(`webhook_step_${step}`)}</div>
-                </div>
-              ))}
+            <div className={styles.stepsSection}>
+              <div className={styles.stepsTitle}>{t('webhook_steps_title')}</div>
+              <div className={styles.steps}>
+                {[1, 2, 3, 4, 5].map((step) => (
+                  <div key={step} className={styles.step}>
+                    <div className={styles.stepNum}>{step}</div>
+                    <div className={styles.stepText}>{t(`webhook_step_${step}`)}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
           <div className={styles.footer}>
-            <Button onClick={onDone}>{t('done')}</Button>
+            <Button size="sm" onClick={onDone}>
+              {t('done')}
+            </Button>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

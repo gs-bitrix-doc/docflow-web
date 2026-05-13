@@ -1,16 +1,12 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
-import type { TaskListFilters, TaskStatus } from './types'
-
 interface UIState {
   selectedTaskIds: string[]
   batchMode: boolean
-  filters: TaskListFilters
 }
 
 const initialState: UIState = {
   selectedTaskIds: [],
   batchMode: false,
-  filters: { status: null, projectId: null },
 }
 
 export const uiSlice = createSlice({
@@ -31,13 +27,26 @@ export const uiSlice = createSlice({
       state.selectedTaskIds = []
       state.batchMode = false
     },
-    setStatusFilter(state, action: PayloadAction<TaskStatus | null>) {
-      state.filters.status = action.payload
+    setSelectedTaskIds(state, action: PayloadAction<string[]>) {
+      state.selectedTaskIds = action.payload
+      state.batchMode = action.payload.length > 0
     },
-    setProjectFilter(state, action: PayloadAction<string | null>) {
-      state.filters.projectId = action.payload
+    setBatchMode(state, action: PayloadAction<boolean>) {
+      state.batchMode = action.payload
+      if (!action.payload) {
+        state.selectedTaskIds = []
+      }
+    },
+    selectRange(state, action: PayloadAction<string[]>) {
+      for (const id of action.payload) {
+        if (!state.selectedTaskIds.includes(id)) {
+          state.selectedTaskIds.push(id)
+        }
+      }
+      state.batchMode = state.selectedTaskIds.length > 0
     },
   },
 })
 
-export const { toggleTask, clearSelection, setStatusFilter, setProjectFilter } = uiSlice.actions
+export const { toggleTask, clearSelection, setSelectedTaskIds, setBatchMode, selectRange } =
+  uiSlice.actions

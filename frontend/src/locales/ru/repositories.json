@@ -51,6 +51,7 @@
   "regenerate_secret": "Сгенерировать новый secret",
   "delete_project": "Удалить проект",
   "open_project": "Открыть",
+  "trigger_translation": "Запустить перевод",
   "copy_secret": "Скопировать secret",
   "copy_webhook_url": "Скопировать URL",
   "secret_modal_title": "Сохраните webhook secret",

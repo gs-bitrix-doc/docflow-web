@@ -9,7 +9,7 @@ from uuid import UUID
 import pathspec
 from fastapi import HTTPException, status
 from pydantic import ValidationError
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -119,13 +119,14 @@ async def list_tasks(
     *,
     project_id: UUID | None,
     status_filter: TaskStatus | None,
+    search: str | None,
     limit: int,
     offset: int,
 ) -> tuple[list[Task], int]:
     if project_id is not None:
         await get_project_or_404(session, project_id, current_user)
 
-    query = _base_visible_task_query(current_user)
+    query = _base_visible_task_query(current_user).options(selectinload(Task.project))
     count_query = (
         select(func.count())
         .select_from(Task)
@@ -139,6 +140,15 @@ async def list_tasks(
     if status_filter is not None:
         query = query.where(Task.status == status_filter)
         count_query = count_query.where(Task.status == status_filter)
+    if search:
+        like_pattern = f"%{search.strip()}%"
+        if like_pattern != "%%":
+            search_condition = or_(
+                Task.file_path.ilike(like_pattern),
+                Task.commit_message.ilike(like_pattern),
+            )
+            query = query.where(search_condition)
+            count_query = count_query.where(search_condition)
 
     query = query.order_by(Task.created_at.desc()).limit(limit).offset(offset)
 
@@ -491,6 +501,7 @@ async def reset_task_for_retry(
             error=None,
             completed_at=None,
             status="queued",
+            current_stage=None,
         )
     )
     if result.rowcount == 0:

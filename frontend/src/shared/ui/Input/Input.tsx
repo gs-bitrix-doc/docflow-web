@@ -6,8 +6,8 @@ import styles from './Input.module.css'
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: boolean
-  wrapperClassName?: string
-  inputClassName?: string
+  wrapperClassName?: string | undefined
+  inputClassName?: string | undefined
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
@@ -20,19 +20,17 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   const resolvedType = isPassword && visible ? 'text' : type
 
   return (
-    <div
-      className={cn(
-        styles.root,
-        error && styles.error,
-        disabled && styles.disabled,
-        wrapperClassName,
-        className,
-      )}
-    >
+    <div className={cn(styles.wrap, wrapperClassName, className)}>
       <input
         ref={ref}
         type={resolvedType}
-        className={cn(styles.input, inputClassName)}
+        className={cn(
+          styles.input,
+          isPassword && styles.hasToggle,
+          error && styles.error,
+          disabled && styles.disabled,
+          inputClassName,
+        )}
         disabled={disabled}
         {...props}
       />
@@ -43,7 +41,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           aria-label={visible ? t('hide_password') : t('show_password')}
           onClick={() => setVisible((current) => !current)}
         >
-          {visible ? <EyeOff size={16} /> : <Eye size={16} />}
+          {visible ? <EyeOff size={14} /> : <Eye size={14} />}
         </button>
       )}
     </div>

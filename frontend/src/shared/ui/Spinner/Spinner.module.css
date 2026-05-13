@@ -3,5 +3,15 @@
   align-items: center;
   justify-content: center;
   color: inherit;
-  animation: spin 0.9s linear infinite;
+  width: var(--spinner-size);
+  height: var(--spinner-size);
+}
+
+.ring {
+  width: 100%;
+  height: 100%;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
 }

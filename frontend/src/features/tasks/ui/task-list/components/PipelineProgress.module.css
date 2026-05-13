@@ -1,0 +1,35 @@
+.label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 96px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: var(--status-running-bg);
+  padding: 3px 9px;
+  gap: 6px;
+  color: var(--status-running);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  animation: pulse-dot 1.4s ease-in-out infinite;
+}
+
+.elapsed {
+  margin-left: 6px;
+  color: color-mix(in srgb, var(--status-running) 70%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+
+.elapsed::before {
+  content: '·';
+  margin-right: 6px;
+}

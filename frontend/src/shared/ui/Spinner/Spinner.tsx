@@ -1,4 +1,4 @@
-import { LoaderCircle } from 'lucide-react'
+import type { CSSProperties } from 'react'
 import { cn } from '@/shared/lib/cn'
 import styles from './Spinner.module.css'
 
@@ -14,8 +14,10 @@ export function Spinner({ size = 16, className, label }: SpinnerProps) {
       className={cn(styles.root, className)}
       aria-hidden={label ? undefined : true}
       aria-label={label}
+      role={label ? 'status' : undefined}
+      style={{ '--spinner-size': `${size}px` } as CSSProperties}
     >
-      <LoaderCircle size={size} strokeWidth={2} />
+      <span className={styles.ring} />
     </span>
   )
 }

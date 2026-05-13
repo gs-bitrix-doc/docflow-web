@@ -1,0 +1,31 @@
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 14px 0;
+  border: 1px solid rgba(109, 184, 255, 0.25);
+  border-radius: 6px;
+  background: rgba(109, 184, 255, 0.08);
+  padding: 6px 14px;
+  color: var(--text);
+  font-size: 12.5px;
+}
+
+.content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.content svg {
+  flex-shrink: 0;
+  color: var(--status-running);
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+.button {
+  margin-left: auto;
+  color: var(--status-running);
+  font-size: 12.5px;
+  font-weight: 500;
+}

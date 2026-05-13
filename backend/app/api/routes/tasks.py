@@ -71,6 +71,7 @@ async def get_tasks(
     current_user: CurrentUser,
     project_id: UUID | None = None,
     status: TaskStatus | None = None,
+    search: str | None = Query(default=None, min_length=1, max_length=200),
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
 ) -> TaskListResponse:
@@ -79,6 +80,7 @@ async def get_tasks(
         current_user,
         project_id=project_id,
         status_filter=status,
+        search=search,
         limit=limit,
         offset=offset,
     )

@@ -2,12 +2,17 @@ export type TaskStatus = 'queued' | 'running' | 'done' | 'failed' | 'published' 
 
 export interface TaskSummary {
   id: string
-  project_id: string
+  project_id: string | null
+  project_name: string | null
   file_path: string
   github_sha: string | null
   commit_message: string | null
+  commit_author_name: string | null
+  commit_author_login: string | null
   status: TaskStatus
+  current_stage: string | null
   created_at: string
+  completed_at: string | null
   updated_at: string
 }
 
@@ -42,4 +47,28 @@ export interface TaskListResponse {
 export interface TaskListFilters {
   status: TaskStatus | null
   projectId: string | null
+  search: string
+}
+
+export interface TaskCreateResponse {
+  created: number
+  task_ids: string[]
+  skipped: Array<{
+    file_path: string
+    reason: 'already_queued' | 'pipeline_running' | 'excluded_by_pattern'
+    existing_task_id: string | null
+  }>
+}
+
+export interface RetryTaskResponse {
+  id: string
+  status: 'queued'
+}
+
+export interface TaskPublishResponse {
+  task_id: string
+  status: 'published'
+  commit_sha: string
+  target_repo: string
+  target_path: string
 }

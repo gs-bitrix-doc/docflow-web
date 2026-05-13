@@ -1,6 +1,7 @@
 import { baseApi } from '@/shared/api/baseApi'
 import type {
   GithubRepo,
+  ProjectFilesResponse,
   Project,
   ProjectCreatePayload,
   ProjectCreateResponse,
@@ -30,6 +31,14 @@ export const projectsApi = baseApi.injectEndpoints({
           project_id: projectId,
           limit: 5,
           offset: 0,
+        },
+      }),
+    }),
+    getProjectFiles: builder.query<ProjectFilesResponse, { projectId: string; path: string }>({
+      query: ({ projectId, path }) => ({
+        url: `/projects/${projectId}/files`,
+        params: {
+          path,
         },
       }),
     }),
@@ -87,6 +96,7 @@ export const {
   useCreateProjectMutation,
   useDeleteProjectMutation,
   useGetGithubReposQuery,
+  useGetProjectFilesQuery,
   useGetProjectQuery,
   useGetProjectTasksQuery,
   useGetProjectsQuery,

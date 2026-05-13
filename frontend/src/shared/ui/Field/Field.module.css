@@ -1,6 +1,6 @@
 .root {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .labelRow {
@@ -11,9 +11,10 @@
 }
 
 .label {
-  color: var(--text);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
+  color: var(--text-dim);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
 .required {
@@ -22,11 +23,12 @@
 
 .hint,
 .error {
-  font-size: var(--font-size-sm);
+  font-size: 11.5px;
+  margin-top: 2px;
 }
 
 .hint {
-  color: var(--text-dim);
+  color: var(--text-faint);
 }
 
 .error {

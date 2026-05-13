@@ -7,6 +7,7 @@ from sqlalchemy import select
 from app.models.project import Project
 from app.models.task import Task
 from app.models.user import User
+from app.services.auth import encrypt_github_access_token
 
 
 async def test_create_project(auth_client, db_session, test_user):
@@ -398,3 +399,26 @@ async def test_regenerate_webhook_secret_not_found(auth_client, db_session):
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Project not found"}
+
+
+async def test_get_project_files(auth_client, db_session, test_project, test_user, mocker):
+    test_user.github_id = 123456
+    test_user.github_login = "octocat"
+    test_user.github_access_token = encrypt_github_access_token("github-token")
+    await db_session.commit()
+
+    github_client = mocker.Mock()
+    github_client.get_repo_tree = mocker.AsyncMock(
+        return_value=["docs/api/index.md", "docs/api/deals.md"]
+    )
+    mocker.patch("app.api.routes.projects.GitHubClient", return_value=github_client)
+
+    response = await auth_client.get(f"/projects/{test_project.id}/files", params={"path": "docs/api"})
+
+    assert response.status_code == 200
+    assert response.json() == {"items": ["docs/api/index.md", "docs/api/deals.md"]}
+    github_client.get_repo_tree.assert_awaited_once_with(
+        test_project.source_repo,
+        test_project.source_branch,
+        "docs/api",
+    )

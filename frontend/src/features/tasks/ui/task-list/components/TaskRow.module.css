@@ -1,0 +1,281 @@
+.row {
+  display: grid;
+  grid-template-columns: 0 minmax(0, 1.4fr) minmax(120px, 0.55fr) auto auto auto auto;
+  align-items: center;
+  gap: 24px;
+  border-bottom: 1px solid var(--border-soft);
+  padding: 16px 14px;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.row:hover {
+  background: var(--surface-hover);
+}
+
+.rowBatchMode {
+  grid-template-columns: 24px minmax(0, 1.4fr) minmax(120px, 0.55fr) auto auto auto auto;
+}
+
+.checkboxCell {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox {
+  display: grid;
+  width: 14px;
+  height: 14px;
+  place-items: center;
+  border: 1px solid #3a3a3a;
+  border-radius: 3px;
+  background: transparent;
+  color: #0f0f0f;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    opacity 120ms ease;
+}
+
+.checkboxVisible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.checkboxSelected {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.path {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.typeIcon {
+  flex-shrink: 0;
+  color: var(--text-dimmer);
+}
+
+.pathText {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.pathValue {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dir {
+  color: var(--text-path-dim);
+}
+
+.file {
+  color: var(--text);
+}
+
+.lang {
+  margin-left: 10px;
+  color: var(--text-dim);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+}
+
+.project {
+  overflow: hidden;
+  color: var(--text-dim);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statusCell {
+  display: flex;
+  justify-content: center;
+  min-width: 96px;
+}
+
+.markerCell {
+  display: flex;
+  min-width: 16px;
+  justify-content: center;
+}
+
+.conflictSlot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+}
+
+.conflictIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--status-conflict);
+}
+
+.time {
+  min-width: 56px;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.tailCell {
+  display: flex;
+  min-width: 96px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.quickActions {
+  display: inline-flex;
+  min-width: 96px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.row:hover .quickActions,
+.row:focus-visible .quickActions {
+  opacity: 1;
+}
+
+.quickAction,
+.quickActionSingle {
+  min-width: 0;
+  padding: 0;
+  color: #888;
+  font-family: inherit;
+  font-size: 13px;
+  text-align: right;
+  transition: color 120ms ease;
+}
+
+.quickActionSingle {
+  min-width: 96px;
+  opacity: 0;
+  transition:
+    opacity 140ms ease,
+    color 120ms ease;
+}
+
+.row:hover .quickActionSingle,
+.row:focus-visible .quickActionSingle {
+  opacity: 1;
+}
+
+.quickAction:hover,
+.quickActionSingle:hover {
+  color: var(--text);
+}
+
+.divider {
+  width: 1px;
+  height: 12px;
+  background: #333;
+}
+
+.elapsedTime {
+  min-width: 96px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0;
+  text-align: right;
+  transition: opacity 140ms ease;
+}
+
+.row:hover .elapsedTime,
+.row:focus-visible .elapsedTime {
+  opacity: 1;
+}
+
+.arrow {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  color: var(--text-dim);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+}
+
+.arrowKept {
+  opacity: 0;
+  transform: translateX(-4px);
+}
+
+.row:hover .arrowKept,
+.row:focus-visible .arrowKept {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.arrowReplaced {
+  opacity: 1;
+  min-width: 96px;
+  justify-content: flex-end;
+}
+
+.row:hover .arrowReplaced,
+.row:focus-visible .arrowReplaced {
+  opacity: 0;
+}
+
+@media (max-width: 1280px) {
+  .row,
+  .rowBatchMode {
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .project,
+  .statusCell,
+  .markerCell,
+  .time,
+  .tailCell {
+    grid-column: 2;
+  }
+
+  .statusCell,
+  .markerCell,
+  .tailCell {
+    justify-content: flex-start;
+  }
+
+  .time {
+    text-align: left;
+  }
+
+  .quickActions,
+  .quickActionSingle,
+  .elapsedTime {
+    opacity: 1;
+    justify-content: flex-start;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .arrowKept,
+  .arrowReplaced {
+    display: none;
+  }
+}

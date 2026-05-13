@@ -1,0 +1,1 @@
+export { TriggerTranslationDialog } from './TriggerTranslationDialog'

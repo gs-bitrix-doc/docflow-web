@@ -47,7 +47,7 @@
 .nav {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 0;
 }
 
 .navGroup {
@@ -58,7 +58,7 @@
 
 .navSectionLabel {
   padding: 0 10px 6px;
-  color: var(--text-faint);
+  color: #333333;
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.1em;
@@ -67,7 +67,7 @@
 
 .navDivider {
   height: 1px;
-  margin: -3px 10px 0;
+  margin: 10px 10px 14px;
   background: var(--border);
 }
 
@@ -75,7 +75,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  border-radius: 6px;
+  border-radius: 5px;
   padding: 7px 10px;
   color: var(--text-dim);
   font-size: 13.5px;
@@ -86,7 +86,7 @@
 }
 
 .navItem:hover {
-  color: var(--text-muted);
+  color: #aaaaaa;
 }
 
 .navItemActive {
@@ -102,6 +102,8 @@
 
 .sidebarFooter {
   margin-top: auto;
+  padding: 14px 6px 0;
+  border-top: 1px solid var(--border);
 }
 
 .userButton {
@@ -110,7 +112,7 @@
   align-items: center;
   gap: 10px;
   border-radius: 6px;
-  padding: 8px 10px;
+  padding: 4px;
   text-align: left;
   transition: background var(--transition-fast);
 }
@@ -154,7 +156,8 @@
 }
 
 .githubDot {
-  background: var(--accent);
+  background: #4ade80;
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
 }
 
 .githubDotOff {
@@ -165,20 +168,20 @@
   min-width: 180px;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-elevated);
-  box-shadow: var(--shadow-dialog);
-  padding: 6px;
+  border-radius: 6px;
+  background: #1a1a1a;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  padding: 4px;
 }
 
 .dropdownItem {
   display: flex;
   width: 100%;
   align-items: center;
-  border-radius: 10px;
-  padding: 9px 10px;
+  border-radius: 4px;
+  padding: 6px 10px;
   color: var(--text);
-  font-size: var(--font-size-sm);
+  font-size: 12.5px;
   transition:
     background var(--transition-fast),
     color var(--transition-fast);

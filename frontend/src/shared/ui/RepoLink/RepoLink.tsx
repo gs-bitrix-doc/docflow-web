@@ -1,4 +1,4 @@
-import { GitBranch } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/lib/cn'
 import styles from './RepoLink.module.css'
@@ -11,6 +11,7 @@ interface RepoLinkProps {
 
 export function RepoLink({ repo, href, className }: RepoLinkProps) {
   const { t } = useTranslation('common')
+  const [owner, name] = repo.includes('/') ? repo.split(/\/(.+)/) : [null, repo]
 
   return (
     <a
@@ -20,8 +21,16 @@ export function RepoLink({ repo, href, className }: RepoLinkProps) {
       rel="noreferrer noopener"
       aria-label={`${t('view_on_github')}: ${repo}`}
     >
-      <GitBranch size={12} className={styles.icon} />
-      <span>{repo}</span>
+      <span className={styles.label}>
+        {owner ? (
+          <>
+            <span className={styles.owner}>{owner}</span>
+            <span className={styles.slash}>/</span>
+          </>
+        ) : null}
+        <span>{name}</span>
+      </span>
+      <ArrowUpRight size={12} className={styles.icon} />
     </a>
   )
 }

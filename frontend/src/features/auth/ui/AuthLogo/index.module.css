@@ -12,24 +12,23 @@
 .glyph {
   display: grid;
   gap: 3px;
-  width: 14px;
+  width: 13px;
 }
 
 .glyph span {
   display: block;
-  height: 2px;
-  border-radius: var(--radius-full);
+  height: 1.5px;
   background: currentColor;
 }
 
 .glyph span:nth-child(1) {
-  width: 14px;
+  width: 9px;
 }
 
 .glyph span:nth-child(2) {
-  width: 11px;
+  width: 13px;
 }
 
 .glyph span:nth-child(3) {
-  width: 8px;
+  width: 9px;
 }

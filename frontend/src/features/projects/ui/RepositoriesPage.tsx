@@ -1,4 +1,4 @@
-import { FolderPlus } from 'lucide-react'
+import { Plus, FolderPlus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { translateApiError } from '@/shared/lib/errorMessages'
@@ -66,7 +66,8 @@ export function RepositoriesPage() {
           <p className={styles.subtitle}>{t('subtitle')}</p>
         </div>
         <Button
-          iconLeft={<FolderPlus size={16} />}
+          size="sm"
+          iconLeft={<Plus size={12} />}
           onClick={() => void navigate('/repositories/new')}
         >
           {t('new_project')}
@@ -109,7 +110,7 @@ export function RepositoriesPage() {
                 <th>{t('table_branches')}</th>
                 <th>{t('table_tasks')}</th>
                 <th>{t('table_created')}</th>
-                <th>{t('table_actions')}</th>
+                <th />
               </tr>
             </thead>
             <tbody>

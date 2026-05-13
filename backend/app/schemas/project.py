@@ -56,6 +56,12 @@ class ProjectWebhookSecretResponse(BaseModel):
     webhook_secret: str
 
 
+class ProjectFilesResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    items: list[str]
+
+
 class ProjectUpdate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

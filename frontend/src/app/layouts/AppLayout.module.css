@@ -5,10 +5,13 @@
 }
 
 .main {
+  display: flex;
   min-width: 0;
 }
 
 .content {
+  width: 100%;
   max-width: var(--content-max);
+  margin: 0 auto;
   padding: var(--content-pad-top) var(--content-pad-x) var(--content-pad-bottom);
 }

@@ -39,6 +39,7 @@ export function Button({
       styles[variant],
       styles[size],
       fullWidth && styles.fullWidth,
+      loading && styles.loading,
       isDisabled && styles.disabled,
       className,
     ),
@@ -53,13 +54,16 @@ export function Button({
 
   return (
     <Component {...componentProps}>
-      <span className={styles.content}>
-        {(iconLeft || loading) && (
-          <span className={styles.slot}>{loading ? <Spinner size={16} /> : iconLeft}</span>
-        )}
+      <span className={cn(styles.content, loading && styles.contentHidden)}>
+        {iconLeft && <span className={styles.slot}>{iconLeft}</span>}
         <span>{children}</span>
-        {iconRight && !loading && <span className={styles.slot}>{iconRight}</span>}
+        {iconRight && <span className={styles.slot}>{iconRight}</span>}
       </span>
+      {loading && (
+        <span className={styles.spinnerSlot} aria-hidden>
+          <Spinner size={14} />
+        </span>
+      )}
     </Component>
   )
 }

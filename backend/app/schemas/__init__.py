@@ -1,4 +1,5 @@
 from app.schemas.analytics import AnalyticsResponse, TasksPerDayPoint, TopErrorStat
+from app.schemas.health import HealthResponse
 from app.schemas.dictionary import (
     DictionaryEntryCreate,
     DictionaryEntryRead,
@@ -13,6 +14,7 @@ from app.schemas.notification import (
 from app.schemas.project import (
     ProjectCreate,
     ProjectCreateResponse,
+    ProjectFilesResponse,
     ProjectRead,
     ProjectUpdate,
     ProjectWebhookSecretResponse,
@@ -39,6 +41,7 @@ __all__ = [
     "DictionaryEntryRead",
     "DictionaryEntryUpdate",
     "DictionaryResponse",
+    "HealthResponse",
     "HistoryPublicationRead",
     "HistoryResponse",
     "ManualTaskFromRepo",
@@ -47,6 +50,7 @@ __all__ = [
     "NotificationChannelUpdate",
     "ProjectCreate",
     "ProjectCreateResponse",
+    "ProjectFilesResponse",
     "ProjectRead",
     "ProjectUpdate",
     "ProjectWebhookSecretResponse",

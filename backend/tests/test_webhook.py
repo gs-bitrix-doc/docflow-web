@@ -64,7 +64,13 @@ async def test_webhook_creates_tasks(client, db_session, test_project, test_user
     payload = {
         "ref": "refs/heads/main",
         "after": "after-sha",
-        "head_commit": {"message": "Update docs"},
+        "sender": {"login": "octocat"},
+        "head_commit": {
+            "message": "Update docs",
+            "author": {
+                "name": "Anna Kuznetsova",
+            },
+        },
         "commits": [
             {
                 "added": ["docs/index.md"],
@@ -89,6 +95,8 @@ async def test_webhook_creates_tasks(client, db_session, test_project, test_user
     ).all()
     assert len(tasks) == 2
     assert tasks[0].commit_message == "Update docs"
+    assert tasks[0].commit_author_name == "Anna Kuznetsova"
+    assert tasks[0].commit_author_login == "octocat"
     assert tasks[0].github_ref == "refs/heads/main"
     assert tasks[0].github_sha == "after-sha"
     assert tasks[0].source_file_sha == "source-sha"

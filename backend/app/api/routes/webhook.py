@@ -182,11 +182,26 @@ async def github_webhook(
 
     github_client = GitHubClient(decrypt_github_access_token(owner.github_access_token))
     commit_message = None
+    commit_author_name = None
+    commit_author_login = None
     head_commit = payload.get("head_commit")
     if isinstance(head_commit, dict):
         message = head_commit.get("message")
         if isinstance(message, str):
             commit_message = message
+        author = head_commit.get("author")
+        if isinstance(author, dict):
+            author_name = author.get("name")
+            if isinstance(author_name, str):
+                commit_author_name = author_name
+            author_login = author.get("username")
+            if isinstance(author_login, str):
+                commit_author_login = author_login
+    sender = payload.get("sender")
+    if isinstance(sender, dict):
+        sender_login = sender.get("login")
+        if isinstance(sender_login, str):
+            commit_author_login = sender_login
 
     async def _fetch_file_metadata(file_path: str):
         source_task = github_client.get_file_content(
@@ -211,6 +226,8 @@ async def github_webhook(
             github_ref=str(payload["ref"]),
             github_sha=payload.get("after"),
             commit_message=commit_message,
+            commit_author_name=commit_author_name,
+            commit_author_login=commit_author_login,
             source_file_sha=source_file_sha,
             target_file_sha=target_file_sha,
             original_content=original_content,

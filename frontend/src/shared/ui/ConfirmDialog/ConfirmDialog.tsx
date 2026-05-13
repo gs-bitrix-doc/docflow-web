@@ -41,7 +41,7 @@ export function ConfirmDialog({
           </div>
           <div className={styles.actions}>
             <Dialog.Close asChild>
-              <Button variant="ghost">{cancelText ?? t('cancel')}</Button>
+              <Button variant="secondary">{cancelText ?? t('cancel')}</Button>
             </Dialog.Close>
             <Button variant={confirmVariant} loading={loading} onClick={onConfirm}>
               {confirmText ?? t('confirm')}

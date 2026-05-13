@@ -26,11 +26,14 @@ class Task(Base):
     github_ref: Mapped[str]
     github_sha: Mapped[str | None]
     commit_message: Mapped[str | None]
+    commit_author_name: Mapped[str | None]
+    commit_author_login: Mapped[str | None]
     source_file_sha: Mapped[str | None]
     target_file_sha: Mapped[str | None]
     original_content: Mapped[str]
     translated_content: Mapped[str | None]
     status: Mapped[str] = mapped_column(server_default="queued")
+    current_stage: Mapped[str | None]
     log: Mapped[str | None]
     error: Mapped[str | None]
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -43,6 +46,10 @@ class Task(Base):
 
     project: Mapped[Project | None] = relationship(back_populates="tasks")
     publications: Mapped[list[Publication]] = relationship(back_populates="task")
+
+    @property
+    def project_name(self) -> str | None:
+        return self.project.name if self.project is not None else None
 
     __table_args__ = (
         CheckConstraint(

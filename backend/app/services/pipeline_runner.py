@@ -95,6 +95,20 @@ async def _emit_event(
     await queue.put({"event": event, "data": data})
 
 
+async def _set_stage(
+    session,
+    task: Task,
+    queue: asyncio.Queue[dict[str, Any] | None],
+    *,
+    stage: str,
+    index: int,
+    total: int,
+) -> None:
+    task.current_stage = stage
+    await session.commit()
+    await _emit_event(queue, "stage_update", {"stage": stage, "index": index, "total": total})
+
+
 def _prepare_workspace(
     task: Task,
     merged_data: dictionary_merger.MergedPipelineData,
@@ -204,6 +218,7 @@ async def run_task(task_id: UUID) -> None:
 
         try:
             task.status = "running"
+            task.current_stage = "prepare"
             await session.commit()
             app_logger.info("task_started", extra={"task_id": str(task.id)})
 
@@ -218,7 +233,7 @@ async def run_task(task_id: UUID) -> None:
             log_handler = QueueLogHandler(loop, queue)
             logger = _build_task_logger(task.id, log_handler)
 
-            await _emit_event(queue, "stage_update", {"stage": "pipeline", "index": 2, "total": 3})
+            await _set_stage(session, task, queue, stage="pipeline", index=2, total=3)
             async with PIPELINE_RUN_LOCK:
                 output_file = await _execute_pipeline(
                     input_file=input_file,
@@ -228,11 +243,12 @@ async def run_task(task_id: UUID) -> None:
                     logger=logger,
                 )
 
-            await _emit_event(queue, "stage_update", {"stage": "persist", "index": 3, "total": 3})
+            await _set_stage(session, task, queue, stage="persist", index=3, total=3)
             task.translated_content = output_file.read_text(encoding="utf-8")
             task.log = log_handler.get_log()
             task.error = None
             task.status = "done"
+            task.current_stage = None
             task.completed_at = datetime.now(UTC)
             await session.commit()
             await _emit_event(queue, "status_change", {"status": "done"})
@@ -242,6 +258,7 @@ async def run_task(task_id: UUID) -> None:
             task.log = _sanitize_error(log_handler.get_log()) if log_handler else None
             task.error = _sanitize_error(traceback.format_exc())
             task.status = "failed"
+            task.current_stage = None
             task.completed_at = datetime.now(UTC)
             await session.commit()
             await _emit_event(queue, "status_change", {"status": "failed"})

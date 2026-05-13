@@ -1,70 +1,70 @@
-.root {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 38px;
+.wrap {
+  position: relative;
   width: 100%;
-  padding: 0 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xs);
-  background: var(--surface-elevated);
-  transition:
-    background-color var(--transition-fast),
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast);
-}
-
-.root:focus-within {
-  border-color: var(--border-strong);
-  box-shadow: 0 0 0 3px var(--focus-ring);
-  background: var(--surface-hover);
-}
-
-.error {
-  border-color: var(--danger);
-}
-
-.disabled {
-  opacity: 0.6;
 }
 
 .input {
-  flex: 1;
   width: 100%;
-  min-width: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
   color: var(--text);
+  padding: 9px 12px;
+  border-radius: 6px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--border-strong);
+  background-color: #131313;
 }
 
 .input:focus-visible {
   box-shadow: none;
 }
 
-.input:-webkit-autofill,
-.input:-webkit-autofill:hover,
-.input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 1000px var(--surface-elevated) inset;
-  -webkit-text-fill-color: var(--text);
-  caret-color: var(--text);
-}
-
 .input::placeholder {
   color: var(--text-faint);
 }
 
+.input.hasToggle {
+  padding-right: 36px;
+}
+
+.input.error {
+  border-color: rgba(217, 119, 87, 0.4);
+}
+
+.input.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.input:-webkit-autofill,
+.input:-webkit-autofill:hover,
+.input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+  -webkit-text-fill-color: var(--text);
+  caret-color: var(--text);
+}
+
 .toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  color: var(--text-dim);
-  border-radius: var(--radius-full);
-  transition:
-    color var(--transition-fast),
-    background-color var(--transition-fast);
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-faint);
+  padding: 4px;
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  transition: color 120ms ease;
 }
 
 .toggle:hover {
   color: var(--text);
-  background: rgba(255, 255, 255, 0.06);
 }
