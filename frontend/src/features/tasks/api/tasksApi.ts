@@ -16,6 +16,10 @@ interface GetTasksParams {
   offset?: number
 }
 
+export function getTaskEventsUrl(taskId: string) {
+  return `/api/tasks/${taskId}/events`
+}
+
 export const tasksApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getTasks: builder.query<TaskListResponse, GetTasksParams | void>({
@@ -46,6 +50,7 @@ export const tasksApi = baseApi.injectEndpoints({
       query: (taskId) => ({
         url: `/tasks/${taskId}/log`,
       }),
+      providesTags: (_result, _error, taskId) => [{ type: 'TaskLog', id: taskId }],
     }),
     updateTask: builder.mutation<TaskDetail, { taskId: string; translated_content: string }>({
       query: ({ taskId, translated_content }) => ({
@@ -99,6 +104,7 @@ export const {
   useGetTaskLogQuery,
   useGetTaskQuery,
   useGetTasksQuery,
+  useLazyGetTaskLogQuery,
   useLazyGetTaskQuery,
   usePublishTaskMutation,
   useRetryTaskMutation,

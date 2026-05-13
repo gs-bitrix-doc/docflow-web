@@ -12,20 +12,22 @@ export function StatChips() {
       <div className={styles.chip}>
         <span className={styles.number}>
           <span className={styles.pulse} />
-          {data?.running ?? 0}
+          {data?.tasks_by_status?.['running'] ?? 0}
         </span>
         <span className={styles.label}>{t('stats.running')}</span>
       </div>
       <div className={styles.chip}>
-        <span className={styles.number}>{data?.done ?? 0}</span>
+        <span className={styles.number}>{data?.tasks_by_status?.['done'] ?? 0}</span>
         <span className={styles.label}>{t('stats.ready')}</span>
       </div>
       <div className={styles.chip}>
-        <span className={cn(styles.number, styles.numberBright)}>{data?.failed ?? 0}</span>
+        <span className={cn(styles.number, styles.numberBright)}>
+          {data?.tasks_by_status?.['failed'] ?? 0}
+        </span>
         <span className={styles.label}>{t('stats.failed')}</span>
       </div>
       <div className={styles.chip}>
-        <span className={styles.number}>{data?.published ?? 0}</span>
+        <span className={styles.number}>{data?.tasks_by_status?.['published'] ?? 0}</span>
         <span className={styles.label}>{t('stats.published')}</span>
       </div>
     </div>

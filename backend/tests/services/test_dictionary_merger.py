@@ -10,6 +10,18 @@ def write_json(path, payload):
     path.write_text(json.dumps(payload), encoding="utf-8")
 
 
+def seed_base_files(data_dir, pre_dir):
+    write_json(data_dir / "dictionary.json", {})
+    write_json(data_dir / "glossary.json", {})
+    (data_dir / "prompt.txt").write_text("Base prompt", encoding="utf-8")
+    write_json(pre_dir / "static_terms.json", {})
+    write_json(pre_dir / "section_headings.json", {})
+    write_json(pre_dir / "note_titles.json", {})
+    write_json(pre_dir / "include_labels.json", {})
+    write_json(pre_dir / "page_title_verbs.json", {})
+    write_json(pre_dir / "page_title_nouns.json", {})
+
+
 async def test_merge_override(tmp_path, db_session, test_user, monkeypatch):
     data_dir = tmp_path / "data"
     pre_dir = data_dir / "pre_translator"
@@ -21,6 +33,8 @@ async def test_merge_override(tmp_path, db_session, test_user, monkeypatch):
     write_json(pre_dir / "section_headings.json", {})
     write_json(pre_dir / "note_titles.json", {})
     write_json(pre_dir / "include_labels.json", {})
+    write_json(pre_dir / "page_title_verbs.json", {})
+    write_json(pre_dir / "page_title_nouns.json", {})
 
     monkeypatch.setattr(dictionary_merger, "PIPELINE_DATA_DIR", data_dir)
     monkeypatch.setattr(dictionary_merger, "PRE_TRANSLATOR_DATA_DIR", pre_dir)
@@ -51,6 +65,8 @@ async def test_merge_delete(tmp_path, db_session, test_user, monkeypatch):
     write_json(pre_dir / "section_headings.json", {})
     write_json(pre_dir / "note_titles.json", {})
     write_json(pre_dir / "include_labels.json", {})
+    write_json(pre_dir / "page_title_verbs.json", {})
+    write_json(pre_dir / "page_title_nouns.json", {})
 
     monkeypatch.setattr(dictionary_merger, "PIPELINE_DATA_DIR", data_dir)
     monkeypatch.setattr(dictionary_merger, "PRE_TRANSLATOR_DATA_DIR", pre_dir)
@@ -75,13 +91,7 @@ async def test_merge_prompt(tmp_path, db_session, test_user, monkeypatch):
     data_dir = tmp_path / "data"
     pre_dir = data_dir / "pre_translator"
     pre_dir.mkdir(parents=True)
-    write_json(data_dir / "dictionary.json", {})
-    write_json(data_dir / "glossary.json", {})
-    (data_dir / "prompt.txt").write_text("Base prompt", encoding="utf-8")
-    write_json(pre_dir / "static_terms.json", {})
-    write_json(pre_dir / "section_headings.json", {})
-    write_json(pre_dir / "note_titles.json", {})
-    write_json(pre_dir / "include_labels.json", {})
+    seed_base_files(data_dir, pre_dir)
 
     monkeypatch.setattr(dictionary_merger, "PIPELINE_DATA_DIR", data_dir)
     monkeypatch.setattr(dictionary_merger, "PRE_TRANSLATOR_DATA_DIR", pre_dir)
@@ -109,9 +119,11 @@ async def test_merge_pre_translator_files(tmp_path, db_session, test_user, monke
     write_json(data_dir / "glossary.json", {})
     (data_dir / "prompt.txt").write_text("Base prompt", encoding="utf-8")
     write_json(pre_dir / "static_terms.json", {"crm": "CRM"})
-    write_json(pre_dir / "section_headings.json", {"Методы": "Methods"})
+    write_json(pre_dir / "section_headings.json", {"methods": "Methods"})
     write_json(pre_dir / "note_titles.json", {})
     write_json(pre_dir / "include_labels.json", {})
+    write_json(pre_dir / "page_title_verbs.json", {"verb": "Get"})
+    write_json(pre_dir / "page_title_nouns.json", {"noun": "deal"})
 
     monkeypatch.setattr(dictionary_merger, "PIPELINE_DATA_DIR", data_dir)
     monkeypatch.setattr(dictionary_merger, "PRE_TRANSLATOR_DATA_DIR", pre_dir)
@@ -126,7 +138,7 @@ async def test_merge_pre_translator_files(tmp_path, db_session, test_user, monke
             ),
             DictionaryEntry(
                 dict_type="note_titles",
-                key="Важно",
+                key="important",
                 value="Important",
                 created_by=test_user.id,
             ),
@@ -139,5 +151,7 @@ async def test_merge_pre_translator_files(tmp_path, db_session, test_user, monke
     assert merged.pre_translator_files["static_terms"] == {
         "crm": "Customer relationship management"
     }
-    assert merged.pre_translator_files["section_headings"] == {"Методы": "Methods"}
-    assert merged.pre_translator_files["note_titles"] == {"Важно": "Important"}
+    assert merged.pre_translator_files["section_headings"] == {"methods": "Methods"}
+    assert merged.pre_translator_files["note_titles"] == {"important": "Important"}
+    assert merged.pre_translator_files["page_title_verbs"] == {"verb": "Get"}
+    assert merged.pre_translator_files["page_title_nouns"] == {"noun": "deal"}

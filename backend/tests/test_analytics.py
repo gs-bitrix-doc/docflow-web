@@ -89,6 +89,7 @@ async def test_analytics_empty_when_no_projects(auth_client, db_session):
             "done": 0,
             "failed": 0,
             "published": 0,
+            "conflict": 0,
         },
         "tasks_per_day": [],
         "top_errors": [],
@@ -163,6 +164,13 @@ async def test_analytics_success_rate(auth_client, db_session, test_user):
     )
     await create_task(
         db_session,
+        project=own_project,
+        file_path="docs/conflict.md",
+        status="conflict",
+        created_at=base + timedelta(hours=3, minutes=30),
+    )
+    await create_task(
+        db_session,
         project=teammate_project,
         file_path="docs/shared.md",
         status="done",
@@ -183,7 +191,7 @@ async def test_analytics_success_rate(auth_client, db_session, test_user):
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload["total_tasks"] == 5
+    assert payload["total_tasks"] == 6
     assert payload["success_rate"] == 0.75
     assert payload["tasks_by_status"] == {
         "queued": 1,
@@ -191,6 +199,7 @@ async def test_analytics_success_rate(auth_client, db_session, test_user):
         "done": 2,
         "failed": 1,
         "published": 1,
+        "conflict": 1,
     }
     assert payload["avg_duration_seconds"] == 750.0
 
@@ -325,6 +334,7 @@ async def test_analytics_empty_range_returns_zeroes(auth_client, db_session, tes
             "done": 0,
             "failed": 0,
             "published": 0,
+            "conflict": 0,
         },
         "tasks_per_day": [],
         "top_errors": [],

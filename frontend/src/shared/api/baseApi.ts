@@ -6,6 +6,7 @@ export const baseApi = createApi({
   baseQuery: axiosBaseQuery(),
   tagTypes: [
     'Task',
+    'TaskLog',
     'Project',
     'History',
     'Dictionary',

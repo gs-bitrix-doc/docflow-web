@@ -17,6 +17,8 @@ PRE_TRANSLATOR_FILE_TYPES = {
     "section_headings": "section_headings.json",
     "note_titles": "note_titles.json",
     "include_labels": "include_labels.json",
+    "page_title_verbs": "page_title_verbs.json",
+    "page_title_nouns": "page_title_nouns.json",
 }
 
 

@@ -1,3 +1,5 @@
+import { TaskDetailPage as TaskDetailPageView } from '@/features/tasks/ui/TaskDetailPage'
+
 export default function TaskDetailPage() {
-  return <div>TaskDetailPage</div>
+  return <TaskDetailPageView />
 }

@@ -1,4 +1,10 @@
 export type TaskStatus = 'queued' | 'running' | 'done' | 'failed' | 'published' | 'conflict'
+export type TaskDetailTab = 'diff' | 'logs' | 'conflict'
+export type TaskPipelineStage = 'prepare' | 'pipeline' | 'persist'
+export type ParsedTaskLogStageId = TaskPipelineStage | 'other'
+
+export const TASK_DETAIL_TABS: TaskDetailTab[] = ['diff', 'logs', 'conflict']
+export const TASK_PIPELINE_STAGES: TaskPipelineStage[] = ['prepare', 'pipeline', 'persist']
 
 export interface TaskSummary {
   id: string
@@ -22,18 +28,18 @@ export interface TaskDetail extends TaskSummary {
   target_file_sha: string | null
   original_content: string
   translated_content: string | null
-  log: string | null
+  conflict_base: string | null
+  conflict_ours: string | null
+  conflict_theirs: string | null
   error: string | null
-  publications: Publication[]
+  publications: TaskPublication[]
 }
 
-export interface Publication {
+export interface TaskPublication {
   id: string
   target_repo: string
   target_path: string
   commit_sha: string
-  commit_url: string
-  published_by: { id: string; display_name: string; github_login: string }
   published_at: string
 }
 
@@ -71,4 +77,51 @@ export interface TaskPublishResponse {
   commit_sha: string
   target_repo: string
   target_path: string
+}
+
+export interface TaskStageUpdateEvent {
+  stage: TaskPipelineStage
+  index: number
+  total: number
+}
+
+export interface TaskStatusChangeEvent {
+  status: TaskStatus
+}
+
+export interface ParsedTaskLogStage {
+  id: ParsedTaskLogStageId
+  lines: string[]
+}
+
+export function getAvailableTaskDetailTabs(status: TaskStatus): TaskDetailTab[] {
+  if (status === 'conflict') {
+    return TASK_DETAIL_TABS
+  }
+
+  return TASK_DETAIL_TABS.filter((tab) => tab !== 'conflict')
+}
+
+export function isTaskDetailTab(value: string | null, status?: TaskStatus): value is TaskDetailTab {
+  if (value !== 'diff' && value !== 'logs' && value !== 'conflict') {
+    return false
+  }
+
+  if (!status) {
+    return true
+  }
+
+  return getAvailableTaskDetailTabs(status).includes(value)
+}
+
+export function getDefaultTaskDetailTab(status: TaskStatus): TaskDetailTab {
+  if (status === 'failed' || status === 'running') {
+    return 'logs'
+  }
+
+  if (status === 'conflict') {
+    return 'conflict'
+  }
+
+  return 'diff'
 }
