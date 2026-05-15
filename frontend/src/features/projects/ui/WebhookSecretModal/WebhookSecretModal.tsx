@@ -6,11 +6,16 @@ import { DialogShell } from '@/shared/ui/DialogShell/DialogShell'
 import { toast } from '@/shared/ui/Toast/toast'
 import styles from './WebhookSecretModal.module.css'
 
+const CREATE_STEPS_BEFORE_URL = [1]
+const CREATE_STEPS_AFTER_URL = [3, 4, 5]
+const REGENERATE_STEPS = [1, 2, 3, 4]
+
 interface WebhookSecretModalProps {
   open: boolean
   webhookSecret: string
   webhookUrl: string
   onDone: () => void
+  mode?: 'create' | 'regenerate'
 }
 
 export function WebhookSecretModal({
@@ -18,6 +23,7 @@ export function WebhookSecretModal({
   webhookSecret,
   webhookUrl,
   onDone,
+  mode = 'create',
 }: WebhookSecretModalProps) {
   const { t } = useTranslation('repositories')
 
@@ -83,15 +89,53 @@ export function WebhookSecretModal({
       </div>
 
       <div className={styles.stepsSection}>
-        <div className={styles.stepsTitle}>{t('webhook_steps_title')}</div>
-        <div className={styles.steps}>
-          {[1, 2, 3, 4, 5].map((step) => (
-            <div key={step} className={styles.step}>
-              <div className={styles.stepNum}>{step}</div>
-              <div className={styles.stepText}>{t(`webhook_step_${step}`)}</div>
+        {mode === 'regenerate' ? (
+          <>
+            <div className={styles.stepsTitle}>{t('webhook_update_steps_title')}</div>
+            <div className={styles.steps}>
+              {REGENERATE_STEPS.map((step) => (
+                <div key={step} className={styles.step}>
+                  <div className={styles.stepNum}>{step}</div>
+                  <div className={styles.stepText}>{t(`webhook_update_step_${step}`)}</div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        ) : (
+          <>
+            <div className={styles.stepsTitle}>{t('webhook_steps_title')}</div>
+            <div className={styles.steps}>
+              {CREATE_STEPS_BEFORE_URL.map((step) => (
+                <div key={step} className={styles.step}>
+                  <div className={styles.stepNum}>{step}</div>
+                  <div className={styles.stepText}>{t(`webhook_step_${step}`)}</div>
+                </div>
+              ))}
+
+              <div className={styles.step}>
+                <div className={styles.stepNum}>2</div>
+                <div className={styles.stepText}>
+                  {t('webhook_step_2')}
+                  <CopyField
+                    className={styles.stepCopyField}
+                    value={webhookUrl}
+                    valueDisplay="text"
+                    buttonLabel={t('copy_webhook_url')}
+                    onCopySuccess={() => toast.success(t('url_copy_success'))}
+                    onCopyError={(error) => toast.error(translateApiError(error))}
+                  />
+                </div>
+              </div>
+
+              {CREATE_STEPS_AFTER_URL.map((step) => (
+                <div key={step} className={styles.step}>
+                  <div className={styles.stepNum}>{step}</div>
+                  <div className={styles.stepText}>{t(`webhook_step_${step}`)}</div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </DialogShell>
   )

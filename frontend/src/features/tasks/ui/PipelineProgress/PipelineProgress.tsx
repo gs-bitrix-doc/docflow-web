@@ -10,11 +10,11 @@ const STAGE_LABEL_KEYS: Record<string, string> = {
 
 interface PipelineProgressProps {
   currentStage: string | null
-  updatedAt: string
+  startedAt: string
 }
 
-function formatElapsed(updatedAt: string, t: (key: string) => string): string {
-  const seconds = Math.max(1, Math.round((Date.now() - new Date(updatedAt).getTime()) / 1000))
+function formatElapsed(startedAt: string, t: (key: string) => string): string {
+  const seconds = Math.max(1, Math.round((Date.now() - new Date(startedAt).getTime()) / 1000))
   if (seconds < 60) return `${seconds} ${t('units.seconds')}`
   const minutes = Math.round(seconds / 60)
   if (minutes < 60) return `${minutes} ${t('units.minutes')}`
@@ -34,7 +34,7 @@ function formatStageLabel(currentStage: string | null, t: (key: string) => strin
   return currentStage
 }
 
-export function PipelineProgress({ currentStage, updatedAt }: PipelineProgressProps) {
+export function PipelineProgress({ currentStage, startedAt }: PipelineProgressProps) {
   const { t } = useTranslation('tasks')
   const [, tick] = useReducer((value: number) => value + 1, 0)
 
@@ -48,7 +48,7 @@ export function PipelineProgress({ currentStage, updatedAt }: PipelineProgressPr
       <span className={styles.dot} />
       <span>
         {formatStageLabel(currentStage, t)}
-        <span className={styles.elapsed}>{formatElapsed(updatedAt, t)}</span>
+        <span className={styles.elapsed}>{formatElapsed(startedAt, t)}</span>
       </span>
     </span>
   )

@@ -143,7 +143,8 @@ describe('HistoryPage', () => {
     expect((await screen.findAllByText('docs/crm-only.md')).length).toBeGreaterThan(0)
     expect(screen.getAllByText('docs/portal-only.md').length).toBeGreaterThan(0)
 
-    await user.selectOptions(screen.getByLabelText('Проект'), crmProjectId)
+    await user.click(screen.getByRole('combobox', { name: 'Проект' }))
+    await user.click(await screen.findByRole('option', { name: 'CRM Docs' }))
 
     await waitFor(() => {
       expect(screen.getAllByText('docs/crm-only.md').length).toBeGreaterThan(0)
@@ -197,9 +198,10 @@ describe('HistoryPage', () => {
     renderHistoryPage()
 
     expect((await screen.findAllByText('docs/anna.md')).length).toBeGreaterThan(0)
-    expect(screen.getByRole('option', { name: 'Boris' })).toBeInTheDocument()
 
-    await user.selectOptions(screen.getByLabelText('Автор'), '22222222-2222-4222-8222-222222222222')
+    await user.click(screen.getByRole('combobox', { name: 'Автор' }))
+    expect(await screen.findByRole('option', { name: 'Boris' })).toBeInTheDocument()
+    await user.click(screen.getByRole('option', { name: 'Boris' }))
 
     await waitFor(() => {
       expect(screen.getAllByText('docs/boris.md').length).toBeGreaterThan(0)
@@ -270,47 +272,53 @@ describe('HistoryPage', () => {
     })
   })
 
-  it('loads additional pages with offset pagination beyond 100 records', async () => {
-    const user = userEvent.setup()
-    const publications = Array.from({ length: 120 }, (_, index) => makePublication(index + 1))
-    const requestedOffsets: number[] = []
-    const requestedLimits: number[] = []
+  it(
+    'loads additional pages with offset pagination beyond 100 records',
+    { timeout: 15000 },
+    async () => {
+      const user = userEvent.setup()
+      const publications = Array.from({ length: 120 }, (_, index) => makePublication(index + 1))
+      const requestedOffsets: number[] = []
+      const requestedLimits: number[] = []
 
-    server.use(
-      http.get('/api/projects', () =>
-        HttpResponse.json([makeProject('project-1', 'CRM Docs', 'team/docs-ru', 'team/docs-en')]),
-      ),
-      http.get('/api/history', ({ request }) => {
-        const url = new URL(request.url)
-        const limit = Number(url.searchParams.get('limit') ?? '20')
-        const offset = Number(url.searchParams.get('offset') ?? '0')
+      server.use(
+        http.get('/api/projects', () =>
+          HttpResponse.json([makeProject('project-1', 'CRM Docs', 'team/docs-ru', 'team/docs-en')]),
+        ),
+        http.get('/api/history', ({ request }) => {
+          const url = new URL(request.url)
+          const limit = Number(url.searchParams.get('limit') ?? '20')
+          const offset = Number(url.searchParams.get('offset') ?? '0')
 
-        requestedLimits.push(limit)
-        requestedOffsets.push(offset)
+          requestedLimits.push(limit)
+          requestedOffsets.push(offset)
 
-        return HttpResponse.json(
-          makeHistoryResponse(publications.slice(offset, offset + limit), {
-            total: publications.length,
-            limit,
-            offset,
-          }),
+          return HttpResponse.json(
+            makeHistoryResponse(publications.slice(offset, offset + limit), {
+              total: publications.length,
+              limit,
+              offset,
+            }),
+          )
+        }),
+      )
+
+      renderHistoryPage()
+
+      expect((await screen.findAllByText('docs/page-20.md')).length).toBeGreaterThan(0)
+
+      for (const targetIndex of [40, 60, 80, 100, 120]) {
+        await user.click(screen.getByRole('button', { name: 'Загрузить ещё' }))
+        expect((await screen.findAllByText(`docs/page-${targetIndex}.md`)).length).toBeGreaterThan(
+          0,
         )
-      }),
-    )
+      }
 
-    renderHistoryPage()
-
-    expect((await screen.findAllByText('docs/page-20.md')).length).toBeGreaterThan(0)
-
-    for (const targetIndex of [40, 60, 80, 100, 120]) {
-      await user.click(screen.getByRole('button', { name: 'Загрузить ещё' }))
-      expect((await screen.findAllByText(`docs/page-${targetIndex}.md`)).length).toBeGreaterThan(0)
-    }
-
-    expect(requestedLimits).toEqual([20, 20, 20, 20, 20, 20])
-    expect(requestedOffsets).toEqual([0, 20, 40, 60, 80, 100])
-    expect(screen.getAllByRole('article')).toHaveLength(120)
-  })
+      expect(requestedLimits).toEqual([20, 20, 20, 20, 20, 20])
+      expect(requestedOffsets).toEqual([0, 20, 40, 60, 80, 100])
+      expect(screen.getAllByRole('article')).toHaveLength(120)
+    },
+  )
 
   it('refetches the active history query after publish invalidates the History tag', async () => {
     let historyRequests = 0

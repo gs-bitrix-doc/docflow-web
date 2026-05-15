@@ -1,0 +1,14 @@
+.saveMeta {
+  color: var(--text-dim);
+  font-size: 12.5px;
+}
+
+.saveMeta strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.saveActions {
+  display: flex;
+  gap: 8px;
+}

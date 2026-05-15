@@ -71,7 +71,7 @@
 }
 
 .webhookActive {
-  color: var(--text-dimmer);
+  color: var(--text-dim);
 }
 
 .webhookInactive {

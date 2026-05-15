@@ -53,10 +53,12 @@ export function HistoryToolbar({
 
       <div className={styles.toolbar}>
         <div className={styles.filters}>
-          <label className={styles.field}>
-            <span className={styles.fieldLabel}>{t('toolbar.project')}</span>
+          <div className={styles.field}>
+            <label htmlFor="history-project-select" className={styles.fieldLabel}>
+              {t('toolbar.project')}
+            </label>
             <Select
-              aria-label={t('toolbar.project')}
+              id="history-project-select"
               value={selectedProjectId ?? ''}
               onChange={(event) => onProjectChange(event.target.value || null)}
             >
@@ -67,12 +69,14 @@ export function HistoryToolbar({
                 </option>
               ))}
             </Select>
-          </label>
+          </div>
 
-          <label className={styles.field}>
-            <span className={styles.fieldLabel}>{t('toolbar.user')}</span>
+          <div className={styles.field}>
+            <label htmlFor="history-user-select" className={styles.fieldLabel}>
+              {t('toolbar.user')}
+            </label>
             <Select
-              aria-label={t('toolbar.user')}
+              id="history-user-select"
               value={selectedPublishedBy ?? ''}
               onChange={(event) => onPublishedByChange(event.target.value || null)}
             >
@@ -83,9 +87,9 @@ export function HistoryToolbar({
                 </option>
               ))}
             </Select>
-          </label>
+          </div>
 
-          <label className={styles.field}>
+          <div className={styles.field}>
             <span className={styles.fieldLabel}>{t('toolbar.date_range')}</span>
             <DateRangePicker
               from={from}
@@ -99,7 +103,7 @@ export function HistoryToolbar({
               }}
               onChange={onDateRangeChange}
             />
-          </label>
+          </div>
         </div>
 
         {hasFilters ? (

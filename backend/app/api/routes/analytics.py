@@ -13,7 +13,7 @@ from app.db.session import get_db_session
 from app.models.project import Project
 from app.models.task import Task
 from app.models.user import User
-from app.schemas.analytics import AnalyticsResponse, TasksPerDayPoint, TopErrorStat
+from app.schemas.analytics import AnalyticsResponse, TasksPerDayBucket, TopErrorStat
 from app.services.auth import get_current_user
 from app.services.history_analytics import (
     apply_source_repo_filter,
@@ -75,6 +75,7 @@ async def get_analytics(
     for row_status, cnt in status_rows:
         tasks_by_status[row_status] = cnt
     total_tasks = sum(tasks_by_status.values())
+    published_count = tasks_by_status["published"]
 
     successful = tasks_by_status["done"] + tasks_by_status["published"]
     terminal = successful + tasks_by_status["failed"]
@@ -87,12 +88,21 @@ async def get_analytics(
     )
     avg_duration_seconds = float(avg_row or 0.0)
 
-    # tasks_per_day via GROUP BY DATE(created_at)
+    # tasks_per_day via GROUP BY DATE(created_at), Task.status
     day_col = func.date(Task.created_at).label("day")
     per_day_rows = (await session.execute(
-        _q(day_col, func.count().label("cnt")).group_by(day_col).order_by(day_col)
+        _q(day_col, Task.status, func.count().label("cnt"))
+        .group_by(day_col, Task.status)
+        .order_by(day_col, Task.status)
     )).all()
-    tasks_per_day = [TasksPerDayPoint(date=str(day), count=cnt) for day, cnt in per_day_rows]
+    per_day_map: dict[str, dict[str, int]] = {}
+    for day, status, cnt in per_day_rows:
+        key = str(day)
+        bucket = per_day_map.setdefault(key, {task_status: 0 for task_status in ALL_TASK_STATUSES})
+        bucket[status] = cnt
+    tasks_per_day = [
+        TasksPerDayBucket(date=day, **bucket) for day, bucket in per_day_map.items()
+    ]
 
     # top_errors: only error texts fetched, parsing in Python
     error_texts = (await session.scalars(
@@ -106,6 +116,7 @@ async def get_analytics(
 
     return AnalyticsResponse(
         total_tasks=total_tasks,
+        published_count=published_count,
         success_rate=success_rate,
         avg_duration_seconds=avg_duration_seconds,
         tasks_by_status=tasks_by_status,

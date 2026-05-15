@@ -1,0 +1,44 @@
+{
+  "title": "Словари",
+  "subtitle": "Данные для перевода и нормализации терминологии. Только чтение.",
+  "search": "Поиск по ключу…",
+  "empty": "Нет записей",
+  "empty_filtered": "Нет совпадений",
+  "error": {
+    "title": "Не удалось загрузить",
+    "description": "Проверьте соединение и попробуйте снова.",
+    "retry": "Повторить"
+  },
+  "mvp_banner": "Редактирование словарей будет доступно после MVP.",
+  "source": {
+    "base": "base",
+    "user": "user"
+  },
+  "columns": {
+    "key": "Ключ",
+    "value": "Значение",
+    "source": "Источник",
+    "updated_by": "Автор",
+    "updated_at": "Обновлено"
+  },
+  "prompt_label": "Системный промпт",
+  "prompt_description": "Используется как инструкция для LLM при каждом переводе.",
+  "types": {
+    "dictionary": "Словарь",
+    "glossary": "Глоссарий",
+    "static_terms": "Статические термины",
+    "section_headings": "Заголовки разделов",
+    "note_titles": "Заголовки заметок",
+    "include_labels": "Метки include",
+    "prompt": "Системный промпт"
+  },
+  "type_descriptions": {
+    "dictionary": "Основной RU→EN словарь терминов",
+    "glossary": "Расширенный глоссарий для валидатора",
+    "static_terms": "Термины pre-translator без перевода",
+    "section_headings": "Заголовки разделов документации",
+    "note_titles": "Заголовки блоков заметок",
+    "include_labels": "Метки тегов include",
+    "prompt": "Системный промпт для LLM"
+  }
+}

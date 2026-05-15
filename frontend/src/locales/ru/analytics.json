@@ -1,0 +1,92 @@
+{
+  "title": "Аналитика",
+  "subtitle": "Сводка по задачам перевода, публикациям и ошибкам за выбранный период.",
+  "toolbar": {
+    "project": "Проект",
+    "all_projects": "Все проекты",
+    "date_range": "Период",
+    "all_dates": "Все даты",
+    "reset": "Сбросить",
+    "export": "Экспорт CSV",
+    "export_done": "CSV экспортирован.",
+    "export_excel": "Экспорт Excel",
+    "export_done_excel": "Excel экспортирован.",
+    "total_one": "{{count}} задача",
+    "total_few": "{{count}} задачи",
+    "total_many": "{{count}} задач"
+  },
+  "datepicker": {
+    "clear": "Очистить",
+    "close": "Закрыть",
+    "hint": "Выберите диапазон дат"
+  },
+  "stats": {
+    "total": {
+      "label": "Всего задач",
+      "hint": "Все задачи, попавшие в текущую выборку."
+    },
+    "success": {
+      "label": "Успешность",
+      "hint": "Доля задач со статусом done или published среди завершённых."
+    },
+    "duration": {
+      "label": "Среднее время",
+      "hint": "Средняя длительность задач с заполненным completed_at."
+    },
+    "published": {
+      "label": "Опубликовано",
+      "hint": "Количество задач, опубликованных в выбранном диапазоне."
+    }
+  },
+  "charts": {
+    "tasks_per_day": {
+      "label": "Задачи по дням",
+      "description": "Распределение задач по статусам внутри каждого дня.",
+      "total_one": "{{count}} задача",
+      "total_few": "{{count}} задачи",
+      "total_many": "{{count}} задач"
+    },
+    "success_rate": {
+      "label": "Успешность по дням",
+      "description": "Дневная доля успешных завершений относительно failed.",
+      "value": "Success rate",
+      "no_terminal": "Нет завершённых задач",
+      "completed": "{{successful}} из {{terminal}} завершены успешно"
+    },
+    "errors": {
+      "label": "Топ ошибок",
+      "description": "Самые частые типы ошибок за выбранный период.",
+      "empty": "За этот период ошибок не было.",
+      "total": "Всего сбоев",
+      "unique_types": "Типов ошибок",
+      "leading_type": "Основной тип"
+    },
+    "export": {
+      "generated_at": "Сформировано",
+      "summary_sheet": "Сводка",
+      "daily_sheet": "По дням",
+      "errors_sheet": "Ошибки",
+      "metrics_section": "Ключевые метрики",
+      "statuses_section": "Статусы",
+      "count": "Количество",
+      "share": "Доля",
+      "date": "Дата",
+      "total": "Всего",
+      "successful": "Успешно",
+      "success_rate": "Успешность",
+      "error_type": "Тип ошибки"
+    }
+  },
+  "empty": {
+    "title": "Данных пока нет",
+    "description": "Когда задачи появятся, здесь будут графики и агрегаты по выполнению.",
+    "filtered_title": "По текущим фильтрам ничего не найдено",
+    "filtered_description": "Попробуйте изменить проект или диапазон дат.",
+    "reset": "Сбросить фильтры"
+  },
+  "error": {
+    "title": "Не удалось загрузить аналитику",
+    "description": "Проверьте соединение и попробуйте ещё раз.",
+    "retry": "Повторить"
+  }
+}

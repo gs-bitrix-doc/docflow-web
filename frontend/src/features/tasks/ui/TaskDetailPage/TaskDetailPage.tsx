@@ -106,7 +106,7 @@ function downloadText(filename: string, content: string, type = 'text/plain;char
 }
 
 function getQueuedSeconds(avgDuration: number | null | undefined) {
-  return Math.max(5, Math.round(avgDuration ?? 30))
+  return Math.max(5, Math.round(avgDuration || 30))
 }
 
 function formatChangeCount(count: number) {

@@ -1,5 +1,8 @@
-import { useState } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
+import { z } from 'zod'
+import i18n from '@/shared/lib/i18n'
 import { Button } from '@/shared/ui/Button/Button'
 import { Field } from '@/shared/ui/Field/Field'
 import { FormDialog } from '@/shared/ui/FormDialog/FormDialog'
@@ -45,6 +48,16 @@ interface OpenEditBranchesDialogProps {
   onSubmit: (payload: { source_branch: string; target_branch: string }) => void
 }
 
+function createSchema() {
+  const branchSchema = z.string().trim().min(1, i18n.t('repositories:validation.branch_required'))
+  return z.object({
+    source_branch: branchSchema,
+    target_branch: branchSchema,
+  })
+}
+
+type FormValues = { source_branch: string; target_branch: string }
+
 function OpenEditBranchesDialog({
   sourceBranch,
   targetBranch,
@@ -53,8 +66,14 @@ function OpenEditBranchesDialog({
   onSubmit,
 }: OpenEditBranchesDialogProps) {
   const { t } = useTranslation(['repositories', 'common'])
-  const [source, setSource] = useState(sourceBranch)
-  const [target, setTarget] = useState(targetBranch)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(createSchema()),
+    defaultValues: { source_branch: sourceBranch, target_branch: targetBranch },
+  })
 
   return (
     <FormDialog
@@ -68,12 +87,10 @@ function OpenEditBranchesDialog({
           </Button>
           <Button
             loading={loading}
-            disabled={!source.trim() || !target.trim()}
             onClick={() =>
-              onSubmit({
-                source_branch: source.trim(),
-                target_branch: target.trim(),
-              })
+              void handleSubmit(({ source_branch, target_branch }) =>
+                onSubmit({ source_branch, target_branch }),
+              )()
             }
           >
             {t('save_branches')}
@@ -81,21 +98,31 @@ function OpenEditBranchesDialog({
         </>
       }
     >
-      <Field label={t('source_branch_label')} htmlFor="edit-source-branch" required>
+      <Field
+        label={t('source_branch_label')}
+        htmlFor="edit-source-branch"
+        error={errors.source_branch?.message}
+        required
+      >
         <Input
           id="edit-source-branch"
           inputClassName="mono"
-          value={source}
-          onChange={(event) => setSource(event.target.value)}
+          error={Boolean(errors.source_branch)}
+          {...register('source_branch')}
         />
       </Field>
 
-      <Field label={t('target_branch_label')} htmlFor="edit-target-branch" required>
+      <Field
+        label={t('target_branch_label')}
+        htmlFor="edit-target-branch"
+        error={errors.target_branch?.message}
+        required
+      >
         <Input
           id="edit-target-branch"
           inputClassName="mono"
-          value={target}
-          onChange={(event) => setTarget(event.target.value)}
+          error={Boolean(errors.target_branch)}
+          {...register('target_branch')}
         />
       </Field>
     </FormDialog>

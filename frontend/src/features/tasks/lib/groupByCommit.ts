@@ -17,7 +17,7 @@ export function groupByCommit(tasks: TaskSummary[]): TaskCommitGroup[] {
   for (const task of tasks) {
     const groupId = task.github_sha
       ? `commit:${task.github_sha}`
-      : `manual:${task.commit_message ?? 'manual'}:${task.created_at.slice(0, 16)}`
+      : `manual:${task.commit_message ?? 'manual'}:${task.created_at.slice(0, 19)}`
 
     const existing = groups.get(groupId)
     if (existing) {

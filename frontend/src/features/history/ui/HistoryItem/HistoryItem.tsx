@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { Avatar } from '@/shared/ui/Avatar/Avatar'
 import { RepoLink } from '@/shared/ui/RepoLink/RepoLink'
+import { ValuePair } from '@/shared/ui/ValuePair/ValuePair'
 import { formatDateTime, formatRelativeShort } from '@/shared/lib/date'
 import type { HistoryPublication } from '../../model/types'
 import styles from './HistoryItem.module.css'
@@ -79,17 +80,17 @@ function HistoryItemComponent({ item }: HistoryItemProps) {
       </div>
 
       <footer className={styles.footer}>
-        <div className={styles.repos}>
-          {item.source_repo ? (
-            <RepoLink repo={item.source_repo} />
-          ) : (
-            <span className={styles.repoFallback}>{t('item.unknown_repo')}</span>
-          )}
-          <span className={styles.repoArrow}>
-            <ArrowRight size={12} />
-          </span>
-          <RepoLink repo={item.target_repo} />
-        </div>
+        <ValuePair
+          className={styles.repos}
+          source={
+            item.source_repo ? (
+              <RepoLink repo={item.source_repo} />
+            ) : (
+              <span className={styles.repoFallback}>{t('item.unknown_repo')}</span>
+            )
+          }
+          target={<RepoLink repo={item.target_repo} />}
+        />
 
         {item.can_open_task ? (
           <Link to={`/tasks/${item.task_id}`} className={styles.taskLink}>

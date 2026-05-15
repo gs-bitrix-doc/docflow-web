@@ -11,6 +11,9 @@ import DictionariesPage from '@/pages/DictionariesPage'
 import HistoryPage from '@/pages/HistoryPage'
 import SettingsPage from '@/pages/SettingsPage'
 import PageInDevelopmentPage from '@/pages/PageInDevelopmentPage'
+import { ProfilePage } from '@/features/settings/ui/ProfilePage/ProfilePage'
+import { GithubPage } from '@/features/settings/ui/GithubPage/GithubPage'
+import { NotificationsPage } from '@/features/settings/ui/NotificationsPage/NotificationsPage'
 import { DevShowcasePage } from '@/pages/DevShowcasePage'
 import i18n from '@/shared/lib/i18n'
 import { AppLayout } from '../layouts/AppLayout'
@@ -83,11 +86,21 @@ const router = createBrowserRouter([
       },
       {
         path: '/dictionaries',
+        element: <Navigate to="/dictionaries/dictionary" replace />,
+      },
+      {
+        path: '/dictionaries/:type',
         element: <DictionariesPage />,
       },
       {
         path: '/settings',
         element: <SettingsPage />,
+        children: [
+          { index: true, element: <Navigate to="/settings/profile" replace /> },
+          { path: 'profile', element: <ProfilePage /> },
+          { path: 'github', element: <GithubPage /> },
+          { path: 'notifications', element: <NotificationsPage /> },
+        ],
       },
     ],
   },

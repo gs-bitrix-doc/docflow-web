@@ -1,0 +1,39 @@
+{
+  "nav": {
+    "profile": "Профиль",
+    "github": "GitHub",
+    "notifications": "Уведомления"
+  },
+  "profile": {
+    "title": "Профиль",
+    "account_section": "Аккаунт",
+    "email_label": "Email",
+    "display_name_label": "Имя",
+    "password_section": "Безопасность",
+    "current_password_label": "Текущий пароль",
+    "new_password_label": "Новый пароль",
+    "confirm_password_label": "Подтверждение пароля",
+    "save_password": "Сохранить пароль",
+    "password_success": "Пароль изменён",
+    "password_mismatch": "Пароли не совпадают",
+    "pipeline_section": "Пайплайн",
+    "pipeline_version_label": "Версия"
+  },
+  "github": {
+    "title": "GitHub",
+    "connection_section": "Подключение",
+    "connected_as": "Подключён как",
+    "disconnect": "Отключить",
+    "disconnect_confirm_title": "Отключить GitHub?",
+    "disconnect_confirm_description": "После отключения webhook-интеграция и автоматическая публикация в репозитории перестанут работать.",
+    "disconnect_confirm_action": "Отключить",
+    "disconnect_success": "GitHub отключён",
+    "not_connected_description": "Подключите GitHub чтобы включить webhook-интеграцию и публикацию переводов в репозитории.",
+    "connect": "Подключить GitHub",
+    "error_title": "Ошибка подключения GitHub"
+  },
+  "notifications": {
+    "title": "Уведомления",
+    "coming_soon": "Настройки уведомлений появятся в следующей версии."
+  }
+}

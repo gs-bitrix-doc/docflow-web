@@ -1,10 +1,12 @@
-from app.schemas.analytics import AnalyticsResponse, TasksPerDayPoint, TopErrorStat
+from app.schemas.analytics import AnalyticsResponse, TasksPerDayBucket, TopErrorStat
 from app.schemas.health import HealthResponse
 from app.schemas.dictionary import (
     DictionaryEntryCreate,
     DictionaryEntryRead,
     DictionaryEntryUpdate,
     DictionaryResponse,
+    DictionarySummaryItem,
+    DictionarySummaryResponse,
 )
 from app.schemas.notification import (
     NotificationChannelCreate,
@@ -41,6 +43,8 @@ __all__ = [
     "DictionaryEntryRead",
     "DictionaryEntryUpdate",
     "DictionaryResponse",
+    "DictionarySummaryItem",
+    "DictionarySummaryResponse",
     "HealthResponse",
     "HistoryPublicationRead",
     "HistoryResponse",
@@ -62,7 +66,7 @@ __all__ = [
     "TaskListResponse",
     "TaskSummary",
     "TaskUpdate",
-    "TasksPerDayPoint",
+    "TasksPerDayBucket",
     "TopErrorStat",
     "UserLogin",
     "UserRead",

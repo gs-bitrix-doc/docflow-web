@@ -1,0 +1,40 @@
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 14px 0;
+  padding: 6px 14px;
+  border: 1px solid rgba(109, 184, 255, 0.25);
+  border-radius: 6px;
+  background: rgba(109, 184, 255, 0.08);
+  color: var(--text);
+  font-size: 12.5px;
+}
+
+.content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--status-running);
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+.action {
+  margin-left: auto;
+}
+
+.button {
+  color: var(--status-running);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.button:hover {
+  text-decoration: underline;
+}

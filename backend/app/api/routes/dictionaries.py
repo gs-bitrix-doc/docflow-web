@@ -12,10 +12,11 @@ from app.schemas.dictionary import (
     DictionaryEntryCreate,
     DictionaryEntryUpdate,
     DictionaryResponse,
+    DictionarySummaryResponse,
     DictionaryType,
 )
 from app.services.auth import get_current_user
-from app.services.dictionaries import get_dictionary_response
+from app.services.dictionaries import get_dictionaries_summary, get_dictionary_response
 
 READONLY_DICTIONARY_DETAIL = "Per-user dictionary editing is deferred until post-MVP"
 
@@ -29,6 +30,26 @@ def _raise_not_implemented() -> None:
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail=READONLY_DICTIONARY_DETAIL,
     )
+
+
+@router.get(
+    "",
+    response_model=DictionarySummaryResponse,
+    summary="Список словарей",
+    description=(
+        "Возвращает все поддерживаемые словари для sidebar-навигации. "
+        "Поле `entry_count` уже учитывает merged-снимок base + user записей."
+    ),
+    responses={
+        200: {"description": "Список словарей со счетчиками"},
+    },
+)
+async def list_dictionaries(
+    session: DbSession,
+    current_user: CurrentUser,
+) -> DictionarySummaryResponse:
+    _ = current_user
+    return await get_dictionaries_summary(session)
 
 
 @router.get(

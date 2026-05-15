@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import { cn } from '@/shared/lib/cn'
 import type { TaskStatus, TaskSummary } from '@/features/tasks/model/types'
-import styles from './StatusTabs.module.css'
+import { CountTabs } from '@/shared/ui/CountTabs/CountTabs'
 
 type TabKey = 'all' | 'queued' | 'running' | 'done' | 'failed' | 'conflict' | 'published'
 
@@ -46,20 +45,21 @@ function getCount(
 
 export function StatusTabs({ activeTab, tasks, counts, onTabChange }: StatusTabsProps) {
   const { t } = useTranslation('tasks')
+  const items = TAB_ORDER.map((tab) => ({
+    key: tab.key,
+    label: t(tab.labelKey),
+    meta: getCount(tasks, counts, tab.status),
+  }))
 
   return (
-    <div className={styles.tabs}>
-      {TAB_ORDER.map((tab) => (
-        <button
-          key={tab.key}
-          type="button"
-          className={cn(styles.tab, activeTab === tab.key && styles.tabActive)}
-          onClick={() => onTabChange(tab.status)}
-        >
-          <span>{t(tab.labelKey)}</span>
-          <span className={styles.count}>{getCount(tasks, counts, tab.status)}</span>
-        </button>
-      ))}
-    </div>
+    <CountTabs
+      items={items}
+      activeKey={activeTab}
+      ariaLabel={t('title')}
+      onChange={(key) => {
+        const tab = TAB_ORDER.find((item) => item.key === key)
+        onTabChange(tab?.status ?? null)
+      }}
+    />
   )
 }

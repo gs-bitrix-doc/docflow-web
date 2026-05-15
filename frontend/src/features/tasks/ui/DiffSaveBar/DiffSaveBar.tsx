@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { getPlural } from '@/shared/lib/plural'
 import { Button } from '@/shared/ui/Button/Button'
-import styles from '../TaskDetailPage/TaskDetailPage.module.css'
+import { StickyActionBar } from '@/shared/ui/StickyActionBar/StickyActionBar'
+import styles from './DiffSaveBar.module.css'
 
 interface DiffSaveBarProps {
   visible: boolean
@@ -25,24 +26,31 @@ export function DiffSaveBar({
   }
 
   return (
-    <div className={styles.saveBar}>
-      <div className={styles.saveMeta}>
-        <strong>{count}</strong>{' '}
-        {getPlural(
-          count,
-          'несохранённое изменение',
-          'несохранённых изменения',
-          'несохранённых изменений',
-        )}
-      </div>
-      <div className={styles.saveActions}>
-        <Button size="sm" variant="secondary" onClick={onDiscard}>
-          {t('diff.discard')}
-        </Button>
-        <Button size="sm" loading={loading} onClick={onSave}>
-          {t('diff.save')}
-        </Button>
-      </div>
-    </div>
+    <StickyActionBar
+      visible={visible}
+      align="end"
+      separated={false}
+      summary={
+        <div className={styles.saveMeta}>
+          <strong>{count}</strong>{' '}
+          {getPlural(
+            count,
+            'несохранённое изменение',
+            'несохранённых изменения',
+            'несохранённых изменений',
+          )}
+        </div>
+      }
+      actions={
+        <div className={styles.saveActions}>
+          <Button size="sm" variant="secondary" onClick={onDiscard}>
+            {t('diff.discard')}
+          </Button>
+          <Button size="sm" loading={loading} onClick={onSave}>
+            {t('diff.save')}
+          </Button>
+        </div>
+      }
+    />
   )
 }

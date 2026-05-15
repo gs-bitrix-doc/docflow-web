@@ -2,6 +2,7 @@ import { GitCommitHorizontal, Terminal } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/lib/cn'
 import { formatCommitTimestamp } from '@/shared/lib/date'
+import { getInitials } from '@/shared/lib/getInitials'
 import type { TaskCommitGroup } from '@/features/tasks/lib/groupByCommit'
 import type { TaskSummary } from '@/features/tasks/model/types'
 import { TaskRow } from '../TaskRow'
@@ -17,14 +18,6 @@ interface CommitGroupProps {
   onRetry: (taskId: string) => void
   onPublish: (taskId: string) => void
   onPublishGroup: (taskIds: string[]) => void
-}
-
-function getInitials(value: string) {
-  const parts = value.trim().split(/\s+/).filter(Boolean).slice(0, 2)
-  if (parts.length === 0) {
-    return 'DF'
-  }
-  return parts.map((part) => part[0]?.toUpperCase() ?? '').join('')
 }
 
 export function CommitGroup({

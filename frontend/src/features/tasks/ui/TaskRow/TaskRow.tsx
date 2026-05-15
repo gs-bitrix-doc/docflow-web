@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, ChevronRight } from 'lucide-react'
+import { Check, ChevronRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/lib/cn'
 import { formatRelativeShort } from '@/shared/lib/date'
@@ -17,28 +17,6 @@ interface TaskRowProps {
   onDownload: (task: TaskSummary) => void
   onRetry: (taskId: string) => void
   onPublish: (taskId: string) => void
-}
-
-function formatElapsedTotal(createdAt: string, updatedAt: string) {
-  const seconds = Math.max(
-    1,
-    Math.round((new Date(updatedAt).getTime() - new Date(createdAt).getTime()) / 1000),
-  )
-
-  if (seconds < 60) {
-    return `${seconds} с`
-  }
-
-  const minutes = Math.floor(seconds / 60)
-  const remainingSeconds = seconds % 60
-
-  if (minutes < 60) {
-    return `${minutes} мин ${remainingSeconds} с`
-  }
-
-  const hours = Math.floor(minutes / 60)
-  const remainingMinutes = minutes % 60
-  return `${hours} ч ${remainingMinutes} мин`
 }
 
 export function TaskRow({
@@ -60,8 +38,7 @@ export function TaskRow({
     task.status === 'done' ||
     task.status === 'published' ||
     task.status === 'failed' ||
-    task.status === 'conflict' ||
-    task.status === 'running'
+    task.status === 'conflict'
 
   const handleRowClick = (event: React.MouseEvent) => {
     if (event.ctrlKey || event.metaKey || batchMode) {
@@ -126,31 +103,15 @@ export function TaskRow({
 
       <div className={styles.statusCell}>
         {task.status === 'running' ? (
-          <PipelineProgress currentStage={task.current_stage} updatedAt={task.updated_at} />
+          <PipelineProgress currentStage={task.current_stage} startedAt={task.created_at} />
         ) : (
           <StatusPill status={task.status} />
-        )}
-      </div>
-
-      <div className={styles.markerCell}>
-        {task.status === 'conflict' ? (
-          <span className={styles.conflictIcon} aria-hidden="true">
-            <AlertTriangle size={11} strokeWidth={1.8} />
-          </span>
-        ) : (
-          <span className={styles.conflictSlot} aria-hidden="true" />
         )}
       </div>
 
       <div className={styles.time}>{formatRelativeShort(task.completed_at ?? task.updated_at)}</div>
 
       <div className={styles.tailCell}>
-        {task.status === 'running' ? (
-          <span className={styles.elapsedTime}>
-            {formatElapsedTotal(task.created_at, task.updated_at)}
-          </span>
-        ) : null}
-
         {canPublish ? (
           <div className={styles.quickActions}>
             <button

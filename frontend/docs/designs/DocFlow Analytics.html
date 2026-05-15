@@ -1,0 +1,1389 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1440" />
+    <title>DocFlow — Аналитика</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script
+      src="https://unpkg.com/react@18.3.1/umd/react.development.js"
+      integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"
+      integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
+      integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y"
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      :root {
+        --bg: #0f0f0f;
+        --surface: #161616;
+        --surface-hover: #1e1e1e;
+        --border: #262626;
+        --border-soft: #1e1e1e;
+        --text: #ededed;
+        --text-dim: #666;
+        --text-dimmer: #555;
+        --text-path-dim: #444;
+        --accent: #ffffff;
+        --s-queued: #888;
+        --s-running: #6db8ff;
+        --s-done: #6dd394;
+        --s-failed: #ff6d6d;
+        --s-published: #b07dff;
+        --s-conflict: #ffb547;
+        --font-mono: 'JetBrains Mono', monospace;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          'Inter',
+          -apple-system,
+          system-ui,
+          sans-serif;
+        font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'ss01';
+        -webkit-font-smoothing: antialiased;
+        font-size: 14px;
+        line-height: 1.5;
+        letter-spacing: -0.005em;
+      }
+      button {
+        font-family: inherit;
+        color: inherit;
+        background: none;
+        border: none;
+        cursor: pointer;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      /* ── App + sidebar (matches Dashboard exactly) ── */
+      .app {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        min-height: 100vh;
+      }
+      .sidebar {
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        padding: 22px 14px 18px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+      }
+      .wordmark {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px 26px;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      .wordmark-glyph {
+        width: 12px;
+        height: 12px;
+        color: var(--text);
+      }
+      .nav {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 10px;
+        border-radius: 5px;
+        color: var(--text-dimmer);
+        font-size: 13.5px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 120ms ease;
+      }
+      .nav-item:hover {
+        color: #aaa;
+      }
+      .nav-item.active {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text);
+      }
+      .nav-item svg {
+        width: 15px;
+        height: 15px;
+        flex-shrink: 0;
+      }
+      .nav-divider {
+        height: 1px;
+        background: var(--border);
+        margin: 10px 10px 14px;
+      }
+      .nav-section-label {
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        color: #333;
+        text-transform: uppercase;
+        padding: 0 10px 6px;
+        font-weight: 500;
+      }
+      .sidebar-footer {
+        margin-top: auto;
+        padding: 14px 6px 0;
+        border-top: 1px solid var(--border);
+      }
+      .user {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 4px;
+      }
+      .avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #2a2a2a;
+        color: var(--text);
+        display: grid;
+        place-items: center;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .user-name {
+        font-size: 12.5px;
+        font-weight: 500;
+      }
+      .user-status {
+        font-size: 11px;
+        color: var(--text-dim);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .gh-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: #4ade80;
+        box-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
+      }
+
+      /* ── Main ── */
+      .main {
+        padding: 38px 56px 80px;
+        max-width: 1180px;
+      }
+
+      /* ── Page header (same as Dashboard) ── */
+      .page-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin-bottom: 0;
+        gap: 24px;
+      }
+      .page-title {
+        font-size: 34px;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        line-height: 1;
+      }
+
+      /* ── Stat chips (exact Dashboard pattern) ── */
+      .stat-chips {
+        display: flex;
+        align-items: center;
+        margin-top: 14px;
+        margin-bottom: 26px;
+      }
+      .stat-chip {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 7px;
+        padding: 0 18px;
+        position: relative;
+      }
+      .stat-chip:first-child {
+        padding-left: 0;
+      }
+      .stat-chip + .stat-chip::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 1px;
+        height: 16px;
+        background: var(--border);
+      }
+      .stat-num {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .stat-label {
+        font-size: 12.5px;
+        color: var(--text-dim);
+      }
+      .stat-pulse {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+        animation: pulse 1.4s ease-in-out infinite;
+        display: inline-block;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0.3;
+          transform: scale(0.85);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      /* ── Tabs (for state divider) ── */
+      .tabs {
+        display: flex;
+        gap: 26px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 0;
+      }
+      .tab {
+        position: relative;
+        padding: 10px 0 12px;
+        font-size: 13.5px;
+        font-weight: 500;
+        color: var(--text-dim);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .tab.active {
+        color: var(--text);
+      }
+      .tab.active::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -1px;
+        height: 1px;
+        background: var(--accent);
+      }
+
+      /* ── Toolbar (same as Dashboard) ── */
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 14px;
+        color: var(--text-dim);
+        font-size: 12.5px;
+        margin-bottom: 0;
+      }
+      .toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .toolbar-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        color: #888;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 120ms ease;
+      }
+      .toolbar-chip:hover {
+        border-color: #3a3a3a;
+        color: var(--text);
+      }
+      .toolbar-chip.active {
+        border-color: var(--text);
+        color: var(--text);
+      }
+      .toolbar-chip svg {
+        width: 11px;
+        height: 11px;
+        flex-shrink: 0;
+      }
+      .toolbar-chip .caret {
+        width: 10px;
+        height: 10px;
+        color: var(--text-dimmer);
+      }
+      .btn-export {
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 7px 13px;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--text-dim);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 120ms ease;
+      }
+      .btn-export:hover {
+        border-color: #3a3a3a;
+        color: var(--text);
+      }
+      .btn-export:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .btn-export svg {
+        width: 12px;
+        height: 12px;
+      }
+
+      /* ── Commit groups (panel wrapper) ── */
+      .commit-group {
+        margin-bottom: 16px;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .commit-group:last-child {
+        border-bottom: none;
+      }
+      .commit-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 14px 10px;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .commit-icon {
+        width: 14px;
+        height: 14px;
+        color: var(--text-dim);
+        flex-shrink: 0;
+      }
+      .commit-msg {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .commit-meta {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-size: 12px;
+        color: var(--text-dim);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .commit-meta .sep {
+        color: #2e2e2e;
+      }
+
+      /* ── Group label ── */
+      .group-label {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--text-dimmer);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 24px 14px 10px;
+      }
+      .group-label:first-child {
+        padding-top: 18px;
+      }
+
+      /* ── Chart panel body ── */
+      .chart-body {
+        padding: 16px 14px 18px;
+      }
+
+      /* ── Task rows (for errors list) ── */
+      .task-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto auto;
+        align-items: center;
+        gap: 18px;
+        padding: 13px 14px;
+        border-bottom: 1px solid var(--border-soft);
+        cursor: default;
+        transition: background 120ms ease;
+      }
+      .task-row:hover {
+        background: var(--surface-hover);
+      }
+      .task-row:last-child {
+        border-bottom: none;
+      }
+      .task-path {
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--text);
+      }
+      .task-path .dir {
+        color: var(--text-path-dim);
+      }
+      .error-bar-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 160px;
+      }
+      .error-bar-bg {
+        height: 2px;
+        background: var(--border-soft);
+        border-radius: 1px;
+        flex: 1;
+        overflow: hidden;
+      }
+      .error-bar-fill {
+        height: 100%;
+        border-radius: 1px;
+        background: rgba(255, 109, 109, 0.65);
+      }
+      .error-count {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--s-failed);
+        font-variant-numeric: tabular-nums;
+        min-width: 24px;
+        text-align: right;
+      }
+
+      /* ── Legend chips (status dots) ── */
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px 14px;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .legend-dot {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11.5px;
+        color: var(--text-dim);
+      }
+      .legend-dot span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      /* ── Grid layout for lower panels ── */
+      .chart-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        border: 1px solid var(--border-soft);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .chart-grid-item {
+      }
+      .chart-grid-item + .chart-grid-item {
+        border-left: 1px solid var(--border-soft);
+      }
+
+      /* ── Full-width panel ── */
+      .chart-full {
+        border: 1px solid var(--border-soft);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 16px;
+      }
+
+      /* ── Empty state ── */
+      .empty-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 80px 40px;
+        text-align: center;
+      }
+      .empty-icon {
+        width: 32px;
+        height: 32px;
+        color: var(--text-dimmer);
+        opacity: 0.55;
+        margin-bottom: 14px;
+      }
+      .empty-title {
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        margin-bottom: 6px;
+      }
+      .empty-sub {
+        font-size: 13px;
+        color: var(--text-dim);
+        max-width: 340px;
+        line-height: 1.6;
+        margin-bottom: 20px;
+      }
+
+      /* ── Skeleton ── */
+      @keyframes skPulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+      .skel {
+        background: var(--surface-hover);
+        border-radius: 4px;
+        animation: skPulse 1.4s ease-in-out infinite;
+      }
+
+      /* ── State divider (between the 3 demo states) ── */
+      .state-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 56px;
+        border-bottom: 1px solid var(--border);
+        background: #0b0b0b;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+      }
+      .state-divider:not(:first-child) {
+        border-top: 2px solid var(--border);
+      }
+      .state-divider .n {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-dimmer);
+        background: #1a1a1a;
+        border: 1px solid var(--border);
+        padding: 2px 7px;
+        border-radius: 3px;
+      }
+      .state-divider .lbl {
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--text-dim);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <!-- ── Sidebar ── -->
+      <aside class="sidebar">
+        <div class="wordmark">
+          <svg
+            class="wordmark-glyph"
+            viewBox="0 0 12 12"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.25"
+            stroke-linecap="square"
+          >
+            <path d="M1.5 2.5h6M1.5 6h9M1.5 9.5h6" />
+          </svg>
+          <span>DocFlow</span>
+        </div>
+        <nav class="nav">
+          <div class="nav-section-label">РАБОТА</div>
+          <div class="nav-item" onclick="location.href = 'DocFlow Dashboard.html'">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 4h10M3 8h10M3 12h6" /></svg
+            ><span>Задачи</span>
+          </div>
+          <div class="nav-item">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="8" cy="8" r="5.5" />
+              <path d="M8 5v3l2 1.5" /></svg
+            ><span>История</span>
+          </div>
+          <div class="nav-item active">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 13V8M7.5 13V4M12 13v-6" /></svg
+            ><span>Аналитика</span>
+          </div>
+          <div class="nav-divider"></div>
+          <div class="nav-section-label">КОНФИГУРАЦИЯ</div>
+          <div class="nav-item" onclick="location.href = 'DocFlow Repositories.html'">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2.5" y="3.5" width="11" height="9" rx="1" />
+              <path d="M2.5 6.5h11" /></svg
+            ><span>Репозитории</span>
+          </div>
+          <div class="nav-item">
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linejoin="round"
+            >
+              <path d="M3 3.5h4.5a1 1 0 0 1 1 1V13a1 1 0 0 0-1-1H3V3.5z" />
+              <path d="M13 3.5H8.5a1 1 0 0 0-1 1V13a1 1 0 0 1 1-1H13V3.5z" /></svg
+            ><span>Словари</span>
+          </div>
+          <div class="nav-item">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="8" cy="8" r="2" />
+              <path
+                d="M8 1.5v2M8 12.5v2M14.5 8h-2M3.5 8h-2M12.6 3.4l-1.4 1.4M4.8 11.2l-1.4 1.4M12.6 12.6l-1.4-1.4M4.8 4.8L3.4 3.4"
+              /></svg
+            ><span>Настройки</span>
+          </div>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="user">
+            <div class="avatar">AK</div>
+            <div>
+              <div class="user-name">Anna Kuznetsova</div>
+              <div class="user-status">
+                <span class="gh-dot"></span><span>GitHub подключён</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <div id="root"></div>
+    </div>
+
+    <script type="text/babel">
+      /* ─── DATA ─── */
+      const MOCK = {
+        total_tasks: 1284,
+        published_count: 891,
+        success_rate: 0.847,
+        avg_duration_seconds: 142,
+        tasks_by_status: {
+          queued: 18,
+          running: 4,
+          done: 124,
+          failed: 47,
+          published: 891,
+          conflict: 12,
+        },
+        tasks_per_day: [
+          { date: '1 мая', queued: 4, running: 1, done: 18, failed: 3, published: 62, conflict: 2 },
+          { date: '2 мая', queued: 2, running: 2, done: 22, failed: 2, published: 58, conflict: 1 },
+          { date: '3 мая', queued: 6, running: 0, done: 15, failed: 4, published: 71, conflict: 3 },
+          { date: '4 мая', queued: 3, running: 1, done: 19, failed: 1, published: 55, conflict: 0 },
+          { date: '5 мая', queued: 1, running: 3, done: 24, failed: 2, published: 64, conflict: 1 },
+          { date: '6 мая', queued: 5, running: 0, done: 12, failed: 5, published: 48, conflict: 2 },
+          { date: '7 мая', queued: 2, running: 1, done: 21, failed: 1, published: 67, conflict: 0 },
+          { date: '8 мая', queued: 7, running: 2, done: 16, failed: 3, published: 59, conflict: 1 },
+          { date: '9 мая', queued: 3, running: 1, done: 20, failed: 2, published: 72, conflict: 2 },
+          {
+            date: '10 мая',
+            queued: 4,
+            running: 0,
+            done: 14,
+            failed: 4,
+            published: 61,
+            conflict: 0,
+          },
+          {
+            date: '11 мая',
+            queued: 2,
+            running: 2,
+            done: 25,
+            failed: 1,
+            published: 68,
+            conflict: 1,
+          },
+          {
+            date: '12 мая',
+            queued: 1,
+            running: 1,
+            done: 22,
+            failed: 2,
+            published: 75,
+            conflict: 0,
+          },
+          {
+            date: '13 мая',
+            queued: 3,
+            running: 3,
+            done: 18,
+            failed: 1,
+            published: 63,
+            conflict: 2,
+          },
+          {
+            date: '14 мая',
+            queued: 2,
+            running: 2,
+            done: 23,
+            failed: 2,
+            published: 70,
+            conflict: 1,
+          },
+        ],
+        top_errors: [
+          { error_type: 'context_length_exceeded', count: 23 },
+          { error_type: 'translator_timeout', count: 17 },
+          { error_type: 'md_parse_error', count: 8 },
+          { error_type: 'validator_link_broken', count: 4 },
+        ],
+      }
+
+      /* ─── STATUS CONFIG (pipeline only — exclude "published" from bar chart) ─── */
+      const PIPELINE = ['queued', 'running', 'done', 'failed', 'conflict']
+      const ST = {
+        queued: { color: '#888', label: 'в очереди' },
+        running: { color: '#6db8ff', label: 'в работе' },
+        done: { color: '#6dd394', label: 'готово' },
+        failed: { color: '#ff6d6d', label: 'ошибка' },
+        conflict: { color: '#ffb547', label: 'конфликт' },
+      }
+
+      function fmtN(n) {
+        return n?.toLocaleString('ru-RU') ?? '—'
+      }
+      function fmtDur(s) {
+        const m = Math.floor(s / 60),
+          sec = s % 60
+        return m > 0 ? `${m} мин ${sec} с` : `${sec} с`
+      }
+
+      /* ─── STAT STRIP ─── */
+      function StatStrip({ data }) {
+        const chips = [
+          { num: fmtN(data.total_tasks), label: 'задач всего', pulse: false },
+          { num: fmtN(data.published_count), label: 'опубликовано', pulse: false },
+          { num: (data.success_rate * 100).toFixed(1) + '%', label: 'успешность', pulse: false },
+          { num: fmtDur(data.avg_duration_seconds), label: 'среднее время', pulse: false },
+        ]
+        return (
+          <div className="stat-chips">
+            {chips.map((c, i) => (
+              <div key={i} className="stat-chip">
+                <span className="stat-num">
+                  {c.pulse && <span className="stat-pulse" />}
+                  {c.num}
+                </span>
+                <span className="stat-label">{c.label}</span>
+              </div>
+            ))}
+          </div>
+        )
+      }
+
+      /* ─── FILTERS TOOLBAR ─── */
+      function FiltersBar({ hasFilters, count }) {
+        const CHEV = (
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            className="caret"
+          >
+            <path d="m4 6 4 4 4-4" />
+          </svg>
+        )
+        return (
+          <div
+            className="toolbar"
+            style={{ borderBottom: '1px solid var(--border-soft)', marginBottom: 0 }}
+          >
+            <div className="toolbar-left">
+              <button className={`toolbar-chip${hasFilters ? ' active' : ''}`}>
+                Все проекты {CHEV}
+              </button>
+              <button className={`toolbar-chip${hasFilters ? ' active' : ''}`}>
+                <svg
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  style={{ width: 11, height: 11 }}
+                >
+                  <rect x="2.5" y="3" width="11" height="11" rx="1" />
+                  <path d="M11 1.5v3M5 1.5v3M2.5 7h11" />
+                </svg>
+                {hasFilters ? '3–9 мая' : '1–14 мая'}
+                {CHEV}
+              </button>
+              {hasFilters && (
+                <button className="toolbar-chip" style={{ color: 'var(--text-dimmer)' }}>
+                  <svg
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    style={{ width: 10, height: 10 }}
+                  >
+                    <path d="M3 3l10 10M13 3 3 13" />
+                  </svg>
+                  Сбросить
+                </button>
+              )}
+            </div>
+            <div className="toolbar-right">
+              {count != null && (
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: 'var(--text-dimmer)',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  {fmtN(count)} задач
+                </span>
+              )}
+              <button className="btn-export" disabled={count == null}>
+                <svg
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                >
+                  <path d="M8 2v9M4.5 7.5 8 11l3.5-3.5M3 13.5h10" />
+                </svg>
+                Экспорт
+              </button>
+            </div>
+          </div>
+        )
+      }
+
+      /* ─── STACKED BAR CHART (pipeline statuses only, thin bars) ─── */
+      function BarChart({ data }) {
+        const W = 1100,
+          H = 210,
+          PL = 36,
+          PR = 8,
+          PT = 8,
+          PB = 28
+        const cW = W - PL - PR,
+          cH = H - PT - PB
+        const totals = data.map((d) => PIPELINE.reduce((s, k) => s + (d[k] || 0), 0))
+        const yMax = Math.ceil(Math.max(...totals) / 10) * 10 || 50
+        const bSlot = cW / data.length
+        const bw = Math.max(8, bSlot * 0.38) // thinner bars
+        const n = data.length
+
+        return (
+          <svg
+            viewBox={`0 0 ${W} ${H}`}
+            width="100%"
+            style={{ display: 'block', overflow: 'visible' }}
+          >
+            {/* Y grid lines */}
+            {[0, 0.5, 1].map((f) => {
+              const y = PT + cH - cH * f,
+                v = Math.round(yMax * f)
+              return (
+                <g key={f}>
+                  <line x1={PL} x2={W - PR} y1={y} y2={y} stroke="#181818" strokeWidth={1} />
+                  <text
+                    x={PL - 4}
+                    y={y + 4}
+                    textAnchor="end"
+                    fill="#3a3a3a"
+                    fontSize={9}
+                    fontFamily="Inter,sans-serif"
+                  >
+                    {v}
+                  </text>
+                </g>
+              )
+            })}
+            {/* Bottom axis line */}
+            <line x1={PL} x2={W - PR} y1={PT + cH} y2={PT + cH} stroke="#262626" strokeWidth={1} />
+
+            {/* Bars */}
+            {data.map((d, i) => {
+              const xC = PL + (i + 0.5) * bSlot,
+                x = xC - bw / 2
+              let sy = PT + cH
+              const segs = PIPELINE.map((k) => {
+                const v = d[k] || 0
+                if (!v) return null
+                const bh = (v / yMax) * cH
+                sy -= bh
+                return { k, y: sy, h: bh }
+              }).filter(Boolean)
+              const showLabel = i === 0 || i === Math.floor(n / 2) || i === n - 1 || i % 2 === 0
+              return (
+                <g key={i}>
+                  {segs.map((s, si) => (
+                    <rect
+                      key={s.k}
+                      x={x}
+                      y={s.y}
+                      width={bw}
+                      height={s.h}
+                      fill={ST[s.k].color}
+                      fillOpacity={0.78}
+                    />
+                  ))}
+                  {showLabel && (
+                    <text
+                      x={xC}
+                      y={H - 4}
+                      textAnchor="middle"
+                      fill="#3a3a3a"
+                      fontSize={9}
+                      fontFamily="Inter,sans-serif"
+                    >
+                      {d.date.split(' ')[0]}
+                    </text>
+                  )}
+                </g>
+              )
+            })}
+          </svg>
+        )
+      }
+
+      /* ─── SUCCESS LINE CHART (line only, no fill) ─── */
+      function SuccessChart({ data }) {
+        const W = 560,
+          H = 200,
+          PL = 36,
+          PR = 8,
+          PT = 10,
+          PB = 28
+        const cW = W - PL - PR,
+          cH = H - PT - PB,
+          n = data.length
+
+        const pts = data.map((d, i) => {
+          const total = (d.done || 0) + (d.failed || 0)
+          const rate = total > 0 ? (d.done / total) * 100 : 0
+          return { x: PL + (i / (n - 1)) * cW, y: PT + cH - (rate / 100) * cH, rate }
+        })
+        const avg = pts.reduce((s, p) => s + p.rate, 0) / n
+        const avgY = PT + cH - (avg / 100) * cH
+
+        function bezier(ps) {
+          if (ps.length < 2) return ''
+          let d = `M ${ps[0].x.toFixed(1)},${ps[0].y.toFixed(1)}`
+          for (let i = 1; i < ps.length; i++) {
+            const p = ps[i - 1],
+              c = ps[i],
+              dx = (c.x - p.x) * 0.4
+            d += ` C ${(p.x + dx).toFixed(1)},${p.y.toFixed(1)} ${(c.x - dx).toFixed(1)},${c.y.toFixed(1)} ${c.x.toFixed(1)},${c.y.toFixed(1)}`
+          }
+          return d
+        }
+
+        return (
+          <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block' }}>
+            {/* Y ticks */}
+            {[0, 50, 100].map((v) => {
+              const y = PT + cH - (v / 100) * cH
+              return (
+                <g key={v}>
+                  <line x1={PL} x2={W - PR} y1={y} y2={y} stroke="#181818" strokeWidth={1} />
+                  <text
+                    x={PL - 4}
+                    y={y + 4}
+                    textAnchor="end"
+                    fill="#3a3a3a"
+                    fontSize={9}
+                    fontFamily="Inter,sans-serif"
+                  >
+                    {v}%
+                  </text>
+                </g>
+              )
+            })}
+            {/* Bottom axis */}
+            <line x1={PL} x2={W - PR} y1={PT + cH} y2={PT + cH} stroke="#262626" strokeWidth={1} />
+
+            {/* Average reference dashed line */}
+            <line
+              x1={PL}
+              x2={W - PR}
+              y1={avgY}
+              y2={avgY}
+              stroke="#333"
+              strokeWidth={1}
+              strokeDasharray="4 3"
+            />
+            <text
+              x={W - PR + 3}
+              y={avgY + 4}
+              fill="#3a3a3a"
+              fontSize={9}
+              fontFamily="Inter,sans-serif"
+            >
+              {avg.toFixed(0)}%
+            </text>
+
+            {/* Line */}
+            <path d={bezier(pts)} fill="none" stroke="#6dd394" strokeWidth={1.5} />
+
+            {/* Dots */}
+            {pts.map((p, i) => (
+              <circle key={i} cx={p.x} cy={p.y} r={2} fill="#6dd394" fillOpacity={0.65} />
+            ))}
+
+            {/* X labels */}
+            {pts.map((p, i) => {
+              if (i !== 0 && i !== Math.floor(n / 2) && i !== n - 1 && i % 3 !== 0) return null
+              return (
+                <text
+                  key={i}
+                  x={p.x}
+                  y={H - 4}
+                  textAnchor="middle"
+                  fill="#3a3a3a"
+                  fontSize={9}
+                  fontFamily="Inter,sans-serif"
+                >
+                  {data[i].date.split(' ')[0]}
+                </text>
+              )
+            })}
+          </svg>
+        )
+      }
+
+      /* ─── ERRORS LIST (task-row style) ─── */
+      function ErrorRows({ errors }) {
+        const maxC = Math.max(...errors.map((e) => e.count))
+        return (
+          <>
+            {errors.map((e, i) => (
+              <div key={i} className="task-row">
+                <div className="task-path">
+                  <span className="dir">error/</span>
+                  {e.error_type}
+                </div>
+                <div className="error-bar-cell">
+                  <div className="error-bar-bg">
+                    <div
+                      className="error-bar-fill"
+                      style={{ width: `${(e.count / maxC) * 100}%` }}
+                    />
+                  </div>
+                </div>
+                <div className="error-count">{e.count}</div>
+              </div>
+            ))}
+          </>
+        )
+      }
+
+      /* ─── CHARTS AREA ─── */
+      function ChartsArea({ data }) {
+        const pipelineTotal = data.tasks_per_day.reduce(
+          (s, d) => s + PIPELINE.reduce((ss, k) => ss + (d[k] || 0), 0),
+          0,
+        )
+        return (
+          <>
+            {/* Full-width: bar chart */}
+            <div className="chart-full">
+              <div className="commit-header">
+                <svg
+                  className="commit-icon"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                >
+                  <path d="M3 13V8M7.5 13V4M12 13v-6" />
+                </svg>
+                <span className="commit-msg">задачи по дням</span>
+                <div className="commit-meta">
+                  <span>1–14 мая 2025</span>
+                  <span className="sep">·</span>
+                  <span>{fmtN(pipelineTotal)} задач в пайплайне</span>
+                </div>
+              </div>
+              <div className="legend">
+                {PIPELINE.map((k) => (
+                  <span key={k} className="legend-dot">
+                    <span style={{ background: ST[k].color }} />
+                    {ST[k].label}
+                  </span>
+                ))}
+              </div>
+              <div className="chart-body" style={{ paddingBottom: 12 }}>
+                <BarChart data={data.tasks_per_day} />
+              </div>
+            </div>
+
+            {/* Two-column lower row */}
+            <div className="chart-grid">
+              {/* Success */}
+              <div className="chart-grid-item">
+                <div className="commit-header">
+                  <svg
+                    className="commit-icon"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  >
+                    <path d="M2 11l4-4 3 3 5-6" />
+                  </svg>
+                  <span className="commit-msg">успешность перевода</span>
+                  <div className="commit-meta">
+                    <span>
+                      среднее{' '}
+                      <strong style={{ color: 'var(--text)' }}>
+                        {(data.success_rate * 100).toFixed(1)}%
+                      </strong>
+                    </span>
+                  </div>
+                </div>
+                <div className="chart-body" style={{ paddingBottom: 12 }}>
+                  <SuccessChart data={data.tasks_per_day} />
+                </div>
+              </div>
+
+              {/* Errors */}
+              <div className="chart-grid-item">
+                <div className="commit-header">
+                  <svg
+                    className="commit-icon"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  >
+                    <path d="M8 3l6 10H2L8 3z" />
+                    <path d="M8 7v3M8 11.5v0.5" />
+                  </svg>
+                  <span className="commit-msg">топ ошибок</span>
+                  <div className="commit-meta">
+                    <span className="sep" style={{ color: 'var(--s-failed)', fontWeight: 600 }}>
+                      {data.top_errors.reduce((s, e) => s + e.count, 0)}
+                    </span>
+                    <span>всего</span>
+                  </div>
+                </div>
+                <ErrorRows errors={data.top_errors} />
+              </div>
+            </div>
+          </>
+        )
+      }
+
+      /* ─── EMPTY STATE ─── */
+      function EmptyState({ hasFilters }) {
+        return (
+          <div className="empty-wrap">
+            <svg
+              className="empty-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            >
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+              <line x1="4" y1="20" x2="20" y2="20" />
+            </svg>
+            <div className="empty-title">Нет данных</div>
+            <div className="empty-sub">
+              За выбранный период или проект задачи не найдены. Попробуйте расширить диапазон дат.
+            </div>
+            {hasFilters && (
+              <button
+                style={{
+                  border: '1px solid var(--border)',
+                  borderRadius: 5,
+                  padding: '7px 14px',
+                  fontSize: 13,
+                  color: 'var(--text)',
+                  fontFamily: 'inherit',
+                }}
+              >
+                Сбросить фильтры
+              </button>
+            )}
+          </div>
+        )
+      }
+
+      /* ─── SKELETON ─── */
+      function Skeleton() {
+        return (
+          <div style={{ padding: '18px 14px' }}>
+            {/* Metric skeletons */}
+            <div
+              style={{
+                display: 'flex',
+                gap: 0,
+                alignItems: 'center',
+                paddingBottom: 20,
+                marginBottom: 4,
+                borderBottom: '1px solid var(--border-soft)',
+              }}
+            >
+              {[80, 72, 60, 90].map((w, i) => (
+                <React.Fragment key={i}>
+                  <div
+                    style={{
+                      padding: i === 0 ? '0 18px 0 0' : '0 18px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 7,
+                    }}
+                  >
+                    <div className="skel" style={{ width: w, height: 14, borderRadius: 3 }} />
+                    <div className="skel" style={{ width: 56, height: 10, borderRadius: 3 }} />
+                  </div>
+                  {i < 3 && <div style={{ width: 1, background: 'var(--border)', height: 16 }} />}
+                </React.Fragment>
+              ))}
+            </div>
+            {/* Charts */}
+            <div className="skel" style={{ height: 250, borderRadius: 6, marginBottom: 14 }} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div className="skel" style={{ height: 220, borderRadius: 6 }} />
+              <div className="skel" style={{ height: 220, borderRadius: 6 }} />
+            </div>
+          </div>
+        )
+      }
+
+      /* ─── PAGE SECTION (one of the three states) ─── */
+      function AnalyticsSection({ state, data }) {
+        const loaded = state === 'loaded'
+        const empty = state === 'empty'
+        const loading = state === 'loading'
+
+        return (
+          <div className="main">
+            {/* Header */}
+            <div className="page-header" style={{ marginBottom: 0 }}>
+              <div>
+                <h1
+                  className="page-title"
+                  style={{
+                    fontSize: 34,
+                    fontWeight: 700,
+                    letterSpacing: '-0.025em',
+                    lineHeight: 1,
+                  }}
+                >
+                  Аналитика
+                </h1>
+                {loaded && <StatStrip data={data} />}
+                {empty && (
+                  <div className="stat-chips">
+                    {['—', '—', '—', '—'].map((v, i) => (
+                      <div key={i} className="stat-chip">
+                        <span className="stat-num" style={{ color: 'var(--text-dimmer)' }}>
+                          {v}
+                        </span>
+                        <span className="stat-label">
+                          {['задач', 'опубл.', 'успешность', 'время'][i]}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {loading && (
+                  <div className="stat-chips" style={{ marginTop: 14, marginBottom: 26 }}>
+                    {[80, 72, 60, 90].map((w, i) => (
+                      <div key={i} className="stat-chip">
+                        <div className="skel" style={{ width: w, height: 14, borderRadius: 3 }} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Filters */}
+            <FiltersBar hasFilters={empty} count={loaded ? data.total_tasks : null} />
+
+            {/* Content */}
+            {loaded && (
+              <div style={{ marginTop: 0 }}>
+                <ChartsArea data={data} />
+              </div>
+            )}
+            {empty && <EmptyState hasFilters={true} />}
+            {loading && <Skeleton />}
+          </div>
+        )
+      }
+
+      /* ─── STATE DIVIDER ─── */
+      function StateDivider({ n, label }) {
+        return (
+          <div className="state-divider">
+            <span className="n">{String(n).padStart(2, '0')}</span>
+            <span className="lbl">{label}</span>
+          </div>
+        )
+      }
+
+      /* ─── APP ─── */
+      function App() {
+        return (
+          <div>
+            <StateDivider n={1} label="Loaded — with data" />
+            <AnalyticsSection state="loaded" data={MOCK} />
+            <StateDivider n={2} label="Empty — no data after filters" />
+            <AnalyticsSection state="empty" data={null} />
+            <StateDivider n={3} label="Loading" />
+            <AnalyticsSection state="loading" data={null} />
+          </div>
+        )
+      }
+
+      ReactDOM.createRoot(document.getElementById('root')).render(<App />)
+    </script>
+  </body>
+</html>

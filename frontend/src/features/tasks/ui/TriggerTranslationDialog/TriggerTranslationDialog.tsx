@@ -1,5 +1,13 @@
-import { useDeferredValue, useMemo, useState } from 'react'
-import { CheckCircle, FolderGit2, LoaderCircle, Upload } from 'lucide-react'
+import { Fragment, useMemo, useState } from 'react'
+import {
+  CheckCircle,
+  ChevronRight,
+  FileText,
+  Folder,
+  FolderGit2,
+  LoaderCircle,
+  Upload,
+} from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { Project } from '@/features/projects/model/types'
 import { useGetProjectFilesQuery } from '@/features/projects/api/projectsApi'
@@ -83,6 +91,36 @@ function DialogEmptyState({
   )
 }
 
+function getTreeLevel(allFiles: string[], prefix: string) {
+  const foldersSet = new Set<string>()
+  const filesAtLevel: string[] = []
+
+  for (const filePath of allFiles) {
+    if (!filePath.startsWith(prefix)) continue
+    const rel = filePath.slice(prefix.length)
+    const slashIdx = rel.indexOf('/')
+    if (slashIdx === -1) {
+      filesAtLevel.push(filePath)
+    } else {
+      foldersSet.add(prefix + rel.slice(0, slashIdx + 1))
+    }
+  }
+
+  return {
+    folders: Array.from(foldersSet).sort(),
+    filesAtLevel: filesAtLevel.sort(),
+  }
+}
+
+function buildBreadcrumbs(path: string): { label: string; prefix: string }[] {
+  if (!path) return []
+  const parts = path.slice(0, -1).split('/')
+  return parts.map((part, i) => ({
+    label: part,
+    prefix: parts.slice(0, i + 1).join('/') + '/',
+  }))
+}
+
 export function TriggerTranslationDialog({
   open,
   onOpenChange,
@@ -97,33 +135,49 @@ export function TriggerTranslationDialog({
   const [submitResult, setSubmitResult] = useState<TaskCreateResponse | null>(null)
 
   const [repoProjectId, setRepoProjectId] = useState('')
-  const [repoPath, setRepoPath] = useState('')
+  const [currentBrowsePath, setCurrentBrowsePath] = useState('')
   const [selectedFiles, setSelectedFiles] = useState<string[]>([])
 
   const [uploadProjectId, setUploadProjectId] = useState('')
+  const [uploadBrowsePath, setUploadBrowsePath] = useState('')
   const [targetPath, setTargetPath] = useState('')
   const [file, setFile] = useState<File | null>(null)
 
-  const deferredRepoPath = useDeferredValue(repoPath.trim())
   const resolvedRepoProjectId = repoProjectId || projects[0]?.id || ''
-  const resolvedUploadProjectId = uploadProjectId || projects[0]?.id || ''
-  const canFetchRepoFiles =
-    tab === 'repo' && Boolean(resolvedRepoProjectId) && Boolean(deferredRepoPath)
-  const repoQueryArg = canFetchRepoFiles
-    ? { projectId: resolvedRepoProjectId, path: deferredRepoPath }
-    : { projectId: '', path: '' }
+  const resolvedUploadProjectId = uploadProjectId
+  const canFetchRepoFiles = tab === 'repo' && Boolean(resolvedRepoProjectId)
+  const canFetchUploadFiles = tab === 'upload' && Boolean(resolvedUploadProjectId)
 
   const {
     data: repoFiles,
     error: repoFilesError,
     isFetching: isFetchingRepoFiles,
-  } = useGetProjectFilesQuery(repoQueryArg, {
-    skip: !canFetchRepoFiles,
-  })
+  } = useGetProjectFilesQuery(
+    { projectId: resolvedRepoProjectId, path: '' },
+    { skip: !canFetchRepoFiles },
+  )
+
+  const { data: uploadFiles, isFetching: isFetchingUploadFiles } = useGetProjectFilesQuery(
+    { projectId: resolvedUploadProjectId, path: '' },
+    { skip: !canFetchUploadFiles },
+  )
 
   const [createManualRepoTasks, { isLoading: isCreatingRepoTasks }] =
     useCreateManualRepoTasksMutation()
   const [uploadManualTask, { isLoading: isUploadingTask }] = useUploadManualTaskMutation()
+
+  const { folders, filesAtLevel } = useMemo(
+    () => getTreeLevel(repoFiles?.items ?? [], currentBrowsePath),
+    [repoFiles, currentBrowsePath],
+  )
+
+  const breadcrumbs = useMemo(() => buildBreadcrumbs(currentBrowsePath), [currentBrowsePath])
+
+  const { folders: uploadFolders, filesAtLevel: uploadFilesAtLevel } = useMemo(
+    () => getTreeLevel(uploadFiles?.items ?? [], uploadBrowsePath),
+    [uploadFiles, uploadBrowsePath],
+  )
+  const uploadBreadcrumbs = useMemo(() => buildBreadcrumbs(uploadBrowsePath), [uploadBrowsePath])
 
   const effectiveSelectedFiles = useMemo(() => {
     if (!repoFiles?.items.length) {
@@ -139,22 +193,10 @@ export function TriggerTranslationDialog({
     return next.length > 0 ? next : repoFiles.items
   }, [repoFiles, selectedFiles])
 
-  const repoCountLabel = useMemo(() => {
-    if (!deferredRepoPath) {
-      return t('tasks:trigger.repo_hint_idle')
-    }
-
-    if (isFetchingRepoFiles) {
-      return t('tasks:trigger.repo_hint_loading')
-    }
-
-    if (repoFilesError) {
-      return translateApiError(repoFilesError)
-    }
-
-    const count = repoFiles?.items.length ?? 0
-    return t('tasks:trigger.repo_hint_found', { count })
-  }, [deferredRepoPath, isFetchingRepoFiles, repoFiles?.items.length, repoFilesError, t])
+  const effectiveSelectedSet = useMemo(
+    () => new Set(effectiveSelectedFiles),
+    [effectiveSelectedFiles],
+  )
 
   const handleToggleFile = (filePath: string) => {
     const baseSelection = effectiveSelectedFiles
@@ -163,6 +205,29 @@ export function TriggerTranslationDialog({
         ? (current.length ? current : baseSelection).filter((item) => item !== filePath)
         : [...(current.length ? current : baseSelection), filePath],
     )
+  }
+
+  const handleUploadNavigate = (folderPath: string) => {
+    setUploadBrowsePath(folderPath)
+    const currentFilename = targetPath.split('/').pop() ?? ''
+    setTargetPath(folderPath + currentFilename)
+  }
+
+  const handleUploadPickFile = (filePath: string) => {
+    setTargetPath(filePath)
+    const slashIdx = filePath.lastIndexOf('/')
+    setUploadBrowsePath(slashIdx >= 0 ? filePath.slice(0, slashIdx + 1) : '')
+  }
+
+  const handleSelectHere = () => {
+    const filesHere = (repoFiles?.items ?? []).filter((f) => f.startsWith(currentBrowsePath))
+    setSelectedFiles(filesHere)
+  }
+
+  const handleRepoProjectChange = (id: string) => {
+    setRepoProjectId(id)
+    setCurrentBrowsePath('')
+    setSelectedFiles([])
   }
 
   const handleSubmitRepo = async () => {
@@ -188,7 +253,12 @@ export function TriggerTranslationDialog({
   }
 
   const handleSubmitUpload = async () => {
-    if (!targetPath.trim() || !file) {
+    if (!file) {
+      return
+    }
+
+    const effectiveTargetPath = resolvedUploadProjectId ? targetPath.trim() : file.name
+    if (resolvedUploadProjectId && !effectiveTargetPath) {
       return
     }
 
@@ -196,7 +266,7 @@ export function TriggerTranslationDialog({
     if (resolvedUploadProjectId) {
       formData.append('project_id', resolvedUploadProjectId)
     }
-    formData.append('target_path', targetPath.trim())
+    formData.append('target_path', effectiveTargetPath)
     formData.append('file', file)
 
     try {
@@ -211,9 +281,10 @@ export function TriggerTranslationDialog({
   const closeAndReset = (nextOpen: boolean) => {
     if (!nextOpen) {
       setRepoProjectId('')
-      setRepoPath('')
+      setCurrentBrowsePath('')
       setSelectedFiles([])
       setUploadProjectId('')
+      setUploadBrowsePath('')
       setTargetPath('')
       setFile(null)
       setSubmitResult(null)
@@ -223,10 +294,13 @@ export function TriggerTranslationDialog({
 
   const isLoading = isCreatingRepoTasks || isUploadingTask
   const canSubmitRepo = Boolean(resolvedRepoProjectId) && effectiveSelectedFiles.length > 0
-  const canSubmitUpload = Boolean(targetPath.trim()) && Boolean(file)
+  const canSubmitUpload = Boolean(file) && (!resolvedUploadProjectId || Boolean(targetPath.trim()))
   const showGithubPrompt = tab === 'repo' && !githubLinked
   const showNoProjectsState = tab === 'repo' && !showGithubPrompt && projects.length === 0
   const showForm = !showGithubPrompt && !showNoProjectsState
+
+  const hasBrowserData =
+    !isFetchingRepoFiles && !repoFilesError && (repoFiles?.items.length ?? 0) > 0
 
   return (
     <DialogShell
@@ -334,7 +408,7 @@ export function TriggerTranslationDialog({
                 <label className={styles.fieldLabel}>{t('tasks:trigger.project_label')}</label>
                 <Select
                   value={resolvedRepoProjectId}
-                  onChange={(event) => setRepoProjectId(event.target.value)}
+                  onChange={(event) => handleRepoProjectChange(event.target.value)}
                 >
                   {projects.map((project) => (
                     <option key={project.id} value={project.id}>
@@ -345,14 +419,118 @@ export function TriggerTranslationDialog({
               </div>
 
               <div className={styles.field}>
-                <label className={styles.fieldLabel}>{t('tasks:trigger.path_label')}</label>
-                <Input
-                  inputClassName={styles.monoInput}
-                  value={repoPath}
-                  onChange={(event) => setRepoPath(event.target.value)}
-                  placeholder={t('tasks:trigger.path_placeholder')}
-                />
-                <div className={styles.fieldHint}>{repoCountLabel}</div>
+                <label className={styles.fieldLabel}>{t('tasks:trigger.files_label')}</label>
+                <div className={styles.browser}>
+                  <div className={styles.browserToolbar}>
+                    <div className={styles.breadcrumb}>
+                      <button
+                        type="button"
+                        className={cn(
+                          styles.breadcrumbSeg,
+                          !currentBrowsePath && styles.breadcrumbSegCurrent,
+                        )}
+                        onClick={() => setCurrentBrowsePath('')}
+                      >
+                        {t('tasks:trigger.browser_root')}
+                      </button>
+                      {breadcrumbs.map((crumb, i) => (
+                        <Fragment key={crumb.prefix}>
+                          <span className={styles.breadcrumbSep}>/</span>
+                          <button
+                            type="button"
+                            className={cn(
+                              styles.breadcrumbSeg,
+                              i === breadcrumbs.length - 1 && styles.breadcrumbSegCurrent,
+                            )}
+                            onClick={() => setCurrentBrowsePath(crumb.prefix)}
+                          >
+                            {crumb.label}
+                          </button>
+                        </Fragment>
+                      ))}
+                    </div>
+                    {isFetchingRepoFiles ? (
+                      <LoaderCircle size={12} className={styles.spin} />
+                    ) : null}
+                  </div>
+
+                  <div className={styles.browserList}>
+                    {isFetchingRepoFiles ? (
+                      <div className={styles.browserPlaceholder}>
+                        {t('tasks:trigger.repo_hint_loading')}
+                      </div>
+                    ) : repoFilesError ? (
+                      <div className={cn(styles.browserPlaceholder, styles.browserError)}>
+                        {translateApiError(repoFilesError)}
+                      </div>
+                    ) : folders.length === 0 && filesAtLevel.length === 0 ? (
+                      <div className={styles.browserPlaceholder}>
+                        {t('tasks:trigger.browser_empty')}
+                      </div>
+                    ) : (
+                      <>
+                        {folders.map((folder) => (
+                          <button
+                            key={folder}
+                            type="button"
+                            className={styles.folderRow}
+                            onClick={() => setCurrentBrowsePath(folder)}
+                          >
+                            <Folder size={13} className={styles.rowIcon} />
+                            <span className={styles.rowName}>
+                              {folder.slice(currentBrowsePath.length)}
+                            </span>
+                            <ChevronRight size={11} className={styles.rowArrow} />
+                          </button>
+                        ))}
+                        {filesAtLevel.map((filePath) => (
+                          <label key={filePath} className={styles.fileRow}>
+                            <input
+                              type="checkbox"
+                              checked={effectiveSelectedSet.has(filePath)}
+                              className={styles.fileCheckbox}
+                              onChange={() => handleToggleFile(filePath)}
+                            />
+                            <FileText size={12} className={styles.rowIcon} />
+                            <span className={styles.rowName}>
+                              {filePath.slice(currentBrowsePath.length)}
+                            </span>
+                          </label>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {hasBrowserData ? (
+                  <div className={styles.selectionBar}>
+                    <span className={styles.selectionCount}>
+                      {t('tasks:trigger.selected_count', {
+                        count: effectiveSelectedFiles.length,
+                      })}
+                    </span>
+                    <div className={styles.selectionActions}>
+                      {currentBrowsePath ? (
+                        <button
+                          type="button"
+                          className={styles.selectionAction}
+                          onClick={handleSelectHere}
+                        >
+                          {t('tasks:trigger.select_here')}
+                        </button>
+                      ) : null}
+                      {selectedFiles.length > 0 ? (
+                        <button
+                          type="button"
+                          className={styles.selectionAction}
+                          onClick={() => setSelectedFiles([])}
+                        >
+                          {t('tasks:trigger.clear_selection')}
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               <div className={styles.fieldRow}>
@@ -369,69 +547,27 @@ export function TriggerTranslationDialog({
                   <div className={styles.readonlyField}>{FIXED_LANGUAGES.target}</div>
                 </div>
               </div>
-
-              <div className={styles.filePicker}>
-                <div className={styles.filePickerHeader}>
-                  <span>{t('tasks:trigger.files_label')}</span>
-                  {isFetchingRepoFiles ? <LoaderCircle size={14} className={styles.spin} /> : null}
-                </div>
-
-                {repoFiles?.items.length ? (
-                  <div className={styles.fileList}>
-                    {repoFiles.items.map((filePath) => {
-                      const checked = effectiveSelectedFiles.includes(filePath)
-                      return (
-                        <label key={filePath} className={styles.fileOption}>
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => handleToggleFile(filePath)}
-                          />
-                          <span>{filePath}</span>
-                        </label>
-                      )
-                    })}
-                  </div>
-                ) : (
-                  <div className={styles.filePlaceholder}>
-                    {t('tasks:trigger.files_placeholder')}
-                  </div>
-                )}
-              </div>
             </div>
           ) : (
             <div className={styles.body}>
-              {projects.length > 0 ? (
-                <div className={styles.field}>
-                  <label className={styles.fieldLabel}>
-                    {t('tasks:trigger.project_optional_label')}
-                  </label>
-                  <Select
-                    value={resolvedUploadProjectId}
-                    onChange={(event) => setUploadProjectId(event.target.value)}
-                  >
-                    {projects.map((project) => (
-                      <option key={project.id} value={project.id}>
-                        {project.name}
-                      </option>
-                    ))}
-                  </Select>
-                  <div className={styles.fieldHint}>{t('tasks:trigger.project_optional_hint')}</div>
-                </div>
-              ) : (
-                <div className={styles.inlineNotice}>
-                  {t('tasks:trigger.upload_without_project_hint')}
-                </div>
-              )}
-
               <div className={styles.field}>
-                <label className={styles.fieldLabel}>{t('tasks:trigger.target_path_label')}</label>
-                <Input
-                  inputClassName={styles.monoInput}
-                  value={targetPath}
-                  onChange={(event) => setTargetPath(event.target.value)}
-                  placeholder={t('tasks:trigger.target_path_placeholder')}
-                />
+                <label className={styles.fieldLabel}>
+                  {t('tasks:trigger.project_optional_label')}
+                </label>
+                <Select
+                  value={resolvedUploadProjectId}
+                  onChange={(event) => {
+                    setUploadProjectId(event.target.value)
+                    setUploadBrowsePath('')
+                  }}
+                >
+                  <option value="">{t('tasks:trigger.upload_no_project')}</option>
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+                </Select>
               </div>
 
               <div className={styles.field}>
@@ -441,12 +577,113 @@ export function TriggerTranslationDialog({
                     className={styles.fileInput}
                     type="file"
                     accept=".md,text/markdown"
-                    onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                    onChange={(event) => {
+                      const picked = event.target.files?.[0] ?? null
+                      setFile(picked)
+                      if (picked && !targetPath.trim()) {
+                        setTargetPath(picked.name)
+                      }
+                    }}
                   />
                   <Upload size={16} />
                   <span>{file?.name ? file.name : t('tasks:trigger.file_placeholder')}</span>
                 </label>
               </div>
+
+              {resolvedUploadProjectId ? (
+                <div className={styles.field}>
+                  <label className={styles.fieldLabel}>
+                    {t('tasks:trigger.target_path_label')}
+                  </label>
+                  <div className={styles.browser}>
+                    <div className={styles.browserToolbar}>
+                      <div className={styles.breadcrumb}>
+                        <button
+                          type="button"
+                          className={cn(
+                            styles.breadcrumbSeg,
+                            !uploadBrowsePath && styles.breadcrumbSegCurrent,
+                          )}
+                          onClick={() => handleUploadNavigate('')}
+                        >
+                          {t('tasks:trigger.browser_root')}
+                        </button>
+                        {uploadBreadcrumbs.map((crumb, i) => (
+                          <Fragment key={crumb.prefix}>
+                            <span className={styles.breadcrumbSep}>/</span>
+                            <button
+                              type="button"
+                              className={cn(
+                                styles.breadcrumbSeg,
+                                i === uploadBreadcrumbs.length - 1 && styles.breadcrumbSegCurrent,
+                              )}
+                              onClick={() => handleUploadNavigate(crumb.prefix)}
+                            >
+                              {crumb.label}
+                            </button>
+                          </Fragment>
+                        ))}
+                      </div>
+                      {isFetchingUploadFiles ? (
+                        <LoaderCircle size={12} className={styles.spin} />
+                      ) : null}
+                    </div>
+
+                    <div className={cn(styles.browserList, styles.browserListCompact)}>
+                      {isFetchingUploadFiles ? (
+                        <div className={styles.browserPlaceholder}>
+                          {t('tasks:trigger.repo_hint_loading')}
+                        </div>
+                      ) : uploadFolders.length === 0 && uploadFilesAtLevel.length === 0 ? (
+                        <div className={styles.browserPlaceholder}>
+                          {t('tasks:trigger.browser_empty')}
+                        </div>
+                      ) : (
+                        <>
+                          {uploadFolders.map((folder) => (
+                            <button
+                              key={folder}
+                              type="button"
+                              className={styles.folderRow}
+                              onClick={() => handleUploadNavigate(folder)}
+                            >
+                              <Folder size={13} className={styles.rowIcon} />
+                              <span className={styles.rowName}>
+                                {folder.slice(uploadBrowsePath.length)}
+                              </span>
+                              <ChevronRight size={11} className={styles.rowArrow} />
+                            </button>
+                          ))}
+                          {uploadFilesAtLevel.map((filePath) => (
+                            <button
+                              key={filePath}
+                              type="button"
+                              className={cn(
+                                styles.folderRow,
+                                targetPath === filePath && styles.uploadFileSelected,
+                              )}
+                              onClick={() => handleUploadPickFile(filePath)}
+                            >
+                              <FileText size={12} className={styles.rowIcon} />
+                              <span className={styles.rowName}>
+                                {filePath.slice(uploadBrowsePath.length)}
+                              </span>
+                            </button>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <Input
+                    inputClassName={styles.monoInput}
+                    value={targetPath}
+                    onChange={(event) => setTargetPath(event.target.value)}
+                    placeholder={t('tasks:trigger.target_path_placeholder')}
+                  />
+                  <div className={styles.fieldHint}>{t('tasks:trigger.target_path_hint')}</div>
+                </div>
+              ) : null}
 
               <div className={styles.fieldRow}>
                 <div className={styles.field}>

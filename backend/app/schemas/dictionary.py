@@ -6,6 +6,15 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+DICTIONARY_TYPES = (
+    "dictionary",
+    "glossary",
+    "static_terms",
+    "section_headings",
+    "note_titles",
+    "include_labels",
+    "prompt",
+)
 DictionaryType = Literal[
     "dictionary",
     "glossary",
@@ -34,6 +43,19 @@ class DictionaryResponse(BaseModel):
 
     dict_type: DictionaryType
     entries: list[DictionaryEntryRead]
+
+
+class DictionarySummaryItem(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    dict_type: DictionaryType
+    entry_count: int = Field(..., ge=0)
+
+
+class DictionarySummaryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    items: list[DictionarySummaryItem]
 
 
 class DictionaryEntryCreate(BaseModel):

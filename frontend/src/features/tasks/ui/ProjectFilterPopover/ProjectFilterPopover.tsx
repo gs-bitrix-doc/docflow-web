@@ -10,7 +10,6 @@ interface ProjectFilterPopoverProps {
   projects: Project[]
   selectedId: string | null
   totalCount: number
-  projectCounts: Record<string, number>
   onChange: (projectId: string | null) => void
 }
 
@@ -18,7 +17,6 @@ export function ProjectFilterPopover({
   projects,
   selectedId,
   totalCount,
-  projectCounts,
   onChange,
 }: ProjectFilterPopoverProps) {
   const { t } = useTranslation('tasks')
@@ -86,7 +84,6 @@ export function ProjectFilterPopover({
               >
                 <Check size={12} className={styles.check} />
                 <span>{project.name}</span>
-                <span className={styles.meta}>{projectCounts[project.id] ?? 0}</span>
               </button>
             ))}
           </div>

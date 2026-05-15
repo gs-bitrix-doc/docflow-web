@@ -64,7 +64,8 @@
   align-self: start;
   align-items: center;
   justify-content: center;
-  margin-top: 29px;
+  /* label(~18px) + field gap(6px) + half input(19px) - half icon(7px) */
+  margin-top: 36px;
   color: var(--text-faint);
 }
 

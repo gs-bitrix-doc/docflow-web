@@ -5,10 +5,12 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useDeleteProjectMutation } from '../../api/projectsApi'
 import { formatDate } from '@/shared/lib/date'
+import { translateApiError } from '@/shared/lib/errorMessages'
+import { toast } from '@/shared/ui/Toast/toast'
+import { ValuePair } from '@/shared/ui/ValuePair/ValuePair'
 import { DeleteProjectDialog } from '../DeleteProjectDialog'
 import type { Project } from '../../model/types'
 import styles from './RepositoryRow.module.css'
-import tableStyles from '../RepositoriesPage/RepositoriesPage.module.css'
 
 interface RepositoryRowProps {
   project: Project
@@ -30,13 +32,17 @@ export function RepositoryRow({ project }: RepositoryRowProps) {
   const [tgtOwner, tgtRepo] = splitRepo(project.target_repo)
 
   async function handleDelete() {
-    await deleteProject(project.id).unwrap()
-    setDeleteOpen(false)
+    try {
+      await deleteProject(project.id).unwrap()
+      setDeleteOpen(false)
+    } catch (error) {
+      toast.error(translateApiError(error))
+    }
   }
 
   return (
     <>
-      <tr className={tableStyles.row}>
+      <tr className={styles.row}>
         {/* Name */}
         <td>
           <Link className={styles.nameLink} to={`/repositories/${project.id}`}>
@@ -56,44 +62,31 @@ export function RepositoryRow({ project }: RepositoryRowProps) {
 
         {/* Source → Target */}
         <td>
-          <div className={styles.repoPair}>
-            <span>
-              <span className={styles.repoOwner}>{srcOwner}</span>
-              {srcRepo}
-            </span>
-            <svg
-              className={styles.pairArrow}
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            >
-              <path d="M3 8h10M9 4l4 4-4 4" />
-            </svg>
-            <span>
-              <span className={styles.repoOwner}>{tgtOwner}</span>
-              {tgtRepo}
-            </span>
-          </div>
+          <ValuePair
+            className={styles.repoPair}
+            source={
+              <span>
+                <span className={styles.repoOwner}>{srcOwner}</span>
+                {srcRepo}
+              </span>
+            }
+            target={
+              <span>
+                <span className={styles.repoOwner}>{tgtOwner}</span>
+                {tgtRepo}
+              </span>
+            }
+          />
         </td>
 
         {/* Branches */}
         <td>
-          <div className={styles.branches}>
-            <span className={styles.branchChip}>{project.source_branch}</span>
-            <svg
-              className={styles.branchArrow}
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            >
-              <path d="M3 8h10M9 4l4 4-4 4" />
-            </svg>
-            <span className={styles.branchChip}>{project.target_branch}</span>
-          </div>
+          <ValuePair
+            className={styles.branches}
+            source={project.source_branch}
+            target={project.target_branch}
+            variant="chip"
+          />
         </td>
 
         {/* Tasks */}

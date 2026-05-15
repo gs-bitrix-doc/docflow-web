@@ -1,6 +1,6 @@
 .row {
   display: grid;
-  grid-template-columns: 0 minmax(0, 1.4fr) minmax(120px, 0.55fr) auto auto auto auto;
+  grid-template-columns: minmax(0, 1.4fr) minmax(120px, 0.55fr) auto auto auto;
   align-items: center;
   gap: 24px;
   border-bottom: 1px solid var(--border-soft);
@@ -14,12 +14,16 @@
 }
 
 .rowBatchMode {
-  grid-template-columns: 24px minmax(0, 1.4fr) minmax(120px, 0.55fr) auto auto auto auto;
+  grid-template-columns: 24px minmax(0, 1.4fr) minmax(120px, 0.55fr) auto auto auto;
 }
 
 .checkboxCell {
-  display: flex;
+  display: none;
   align-items: center;
+}
+
+.rowBatchMode .checkboxCell {
+  display: flex;
 }
 
 .checkbox {
@@ -107,25 +111,6 @@
   min-width: 96px;
 }
 
-.markerCell {
-  display: flex;
-  min-width: 16px;
-  justify-content: center;
-}
-
-.conflictSlot {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-}
-
-.conflictIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--status-conflict);
-}
-
 .time {
   min-width: 56px;
   color: var(--text-dim);
@@ -191,22 +176,6 @@
   background: #333;
 }
 
-.elapsedTime {
-  min-width: 96px;
-  color: var(--text-faint);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  opacity: 0;
-  text-align: right;
-  transition: opacity 140ms ease;
-}
-
-.row:hover .elapsedTime,
-.row:focus-visible .elapsedTime {
-  opacity: 1;
-}
-
 .arrow {
   display: grid;
   width: 20px;
@@ -241,22 +210,36 @@
 }
 
 @media (max-width: 1280px) {
-  .row,
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
   .rowBatchMode {
     grid-template-columns: 24px minmax(0, 1fr);
     gap: 12px;
   }
 
+  .rowBatchMode .checkboxCell {
+    grid-row: 1 / -1;
+    align-self: center;
+  }
+
   .project,
   .statusCell,
-  .markerCell,
   .time,
   .tailCell {
+    grid-column: 1;
+  }
+
+  .rowBatchMode .project,
+  .rowBatchMode .statusCell,
+  .rowBatchMode .time,
+  .rowBatchMode .tailCell {
     grid-column: 2;
   }
 
   .statusCell,
-  .markerCell,
   .tailCell {
     justify-content: flex-start;
   }
@@ -266,8 +249,7 @@
   }
 
   .quickActions,
-  .quickActionSingle,
-  .elapsedTime {
+  .quickActionSingle {
     opacity: 1;
     justify-content: flex-start;
     min-width: 0;

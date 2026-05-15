@@ -211,6 +211,74 @@ async def test_get_dictionary_hides_deleted_entries(auth_client, db_session, tes
     ]
 
 
+async def test_list_dictionaries_returns_summary_counts(
+    auth_client,
+    db_session,
+    test_user,
+    monkeypatch,
+    tmp_path,
+):
+    data_dir = tmp_path / "data"
+    pre_dir = data_dir / "pre_translator"
+    pre_dir.mkdir(parents=True)
+    write_json(data_dir / "dictionary.json", {"hello": "Hello", "world": "World"})
+    write_json(data_dir / "glossary.json", {"deal": "Deal"})
+    (data_dir / "prompt.txt").write_text("Base prompt", encoding="utf-8")
+    write_json(pre_dir / "static_terms.json", {"api": "API"})
+    write_json(pre_dir / "section_headings.json", {})
+    write_json(pre_dir / "note_titles.json", {"note": "Note"})
+    write_json(pre_dir / "include_labels.json", {"include": "Include"})
+
+    monkeypatch.setattr(dictionary_merger, "PIPELINE_DATA_DIR", data_dir)
+    monkeypatch.setattr(dictionary_merger, "PRE_TRANSLATOR_DATA_DIR", pre_dir)
+
+    db_session.add_all(
+        [
+            DictionaryEntry(
+                dict_type="dictionary",
+                key="hello",
+                value="Hi",
+                created_by=test_user.id,
+            ),
+            DictionaryEntry(
+                dict_type="dictionary",
+                key="world",
+                value="",
+                is_deleted=True,
+                created_by=test_user.id,
+            ),
+            DictionaryEntry(
+                dict_type="glossary",
+                key="crm",
+                value="CRM",
+                created_by=test_user.id,
+            ),
+            DictionaryEntry(
+                dict_type="prompt",
+                key="main",
+                value="Custom prompt",
+                created_by=test_user.id,
+            ),
+        ]
+    )
+    await db_session.commit()
+
+    response = await auth_client.get("/dictionaries")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "items": [
+            {"dict_type": "dictionary", "entry_count": 1},
+            {"dict_type": "glossary", "entry_count": 2},
+            {"dict_type": "static_terms", "entry_count": 1},
+            {"dict_type": "section_headings", "entry_count": 0},
+            {"dict_type": "note_titles", "entry_count": 1},
+            {"dict_type": "include_labels", "entry_count": 1},
+            {"dict_type": "prompt", "entry_count": 1},
+        ]
+    }
+
+
 async def test_get_dictionary_invalid_type_returns_422(auth_client):
     response = await auth_client.get("/dictionaries/unknown")
 

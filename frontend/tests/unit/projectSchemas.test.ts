@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { projectCreateSchema, projectUpdateSchema } from '@/features/projects/lib/schemas'
+import {
+  createProjectCreateSchema,
+  createProjectUpdateSchema,
+} from '@/features/projects/lib/schemas'
+
+const projectCreateSchema = createProjectCreateSchema()
+const projectUpdateSchema = createProjectUpdateSchema()
 
 describe('project schemas', () => {
   it('accepts valid create payload', () => {

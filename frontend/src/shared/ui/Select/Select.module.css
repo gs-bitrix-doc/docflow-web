@@ -6,18 +6,20 @@
 .select {
   width: 100%;
   min-height: 34px;
-  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 0 32px 0 11px;
+  padding: 6px 10px;
   background: #101010;
   color: var(--text);
   font-size: 13px;
   outline: none;
   transition:
-    border-color var(--transition-fast),
-    background var(--transition-fast),
-    box-shadow var(--transition-fast);
+    border-color 120ms ease,
+    background 120ms ease;
 }
 
 .select:hover {
@@ -25,28 +27,96 @@
   background: #121212;
 }
 
-.select:focus-visible {
-  box-shadow: var(--shadow-focus);
+.wrap:focus-within .select {
+  border-color: #3a3a3a;
+  background: #131313;
 }
 
-.select:disabled,
-.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.select:focus-visible {
+  box-shadow: none;
+}
+
+.value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .error {
   border-color: rgba(217, 119, 87, 0.4);
 }
 
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .icon {
-  position: absolute;
-  top: 50%;
-  right: 11px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: var(--text-dim);
+  flex-shrink: 0;
+  transition: color 120ms ease;
+}
+
+.wrap:hover .icon,
+.wrap:focus-within .icon {
+  color: var(--text);
+}
+
+.content {
+  z-index: 90;
+  min-width: var(--radix-select-trigger-width);
+  max-height: 220px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #1a1a1a;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+}
+
+.viewport {
+  padding: 4px;
+}
+
+.option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border-radius: 4px;
+  padding: 8px 32px 8px 12px;
+  color: var(--text);
+  font-size: 12.5px;
+  text-align: left;
+  outline: none;
+  transition: background-color 120ms ease;
+}
+
+.option[data-highlighted] {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.option[data-state='checked'] {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.option[data-disabled] {
+  opacity: 0.5;
   pointer-events: none;
+}
+
+.check {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
   transform: translateY(-50%);
 }

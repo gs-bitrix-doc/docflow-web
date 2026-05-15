@@ -1,8 +1,7 @@
 import { AlertTriangle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { cn } from '@/shared/lib/cn'
 import type { TaskDetailTab } from '@/features/tasks/model/types'
-import styles from '../TaskDetailPage/TaskDetailPage.module.css'
+import { CountTabs } from '@/shared/ui/CountTabs/CountTabs'
 
 interface TaskDetailTabsProps {
   activeTab: TaskDetailTab
@@ -13,27 +12,21 @@ interface TaskDetailTabsProps {
 
 export function TaskDetailTabs({ activeTab, tabs, meta, onChange }: TaskDetailTabsProps) {
   const { t } = useTranslation('tasks')
+  const items = tabs.map((tab) => ({
+    key: tab,
+    label: t(`detail_tabs.${tab}`),
+    meta: meta?.[tab] ?? null,
+    icon: tab === 'conflict' ? <AlertTriangle size={12} /> : null,
+  }))
 
   return (
-    <div className={styles.tabs} role="tablist" aria-label="Task detail tabs">
-      {tabs.map((tab) => (
-        <button
-          key={tab}
-          type="button"
-          role="tab"
-          aria-selected={activeTab === tab}
-          className={cn(styles.tab, activeTab === tab && styles.tabActive)}
-          onClick={() => onChange(tab)}
-        >
-          {tab === 'conflict' ? (
-            <span className={styles.tabConflictIcon}>
-              <AlertTriangle size={12} />
-            </span>
-          ) : null}
-          <span>{t(`detail_tabs.${tab}`)}</span>
-          {meta?.[tab] ? <span className={styles.tabCount}>{meta[tab]}</span> : null}
-        </button>
-      ))}
-    </div>
+    <CountTabs
+      items={items}
+      activeKey={activeTab}
+      variant="detail"
+      role="tablist"
+      ariaLabel="Task detail tabs"
+      onChange={onChange}
+    />
   )
 }

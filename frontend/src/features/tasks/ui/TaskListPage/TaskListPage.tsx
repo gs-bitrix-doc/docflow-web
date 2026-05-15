@@ -113,9 +113,10 @@ export function TaskListPage() {
     (task) => selectedIdsSet.has(task.id) && task.status === 'done' && Boolean(task.project_id),
   ).length
 
-  // Keep selection in sync with currently visible tasks.
+  // Keep selection in sync when the task list changes (filter change / refetch).
   useEffect(() => {
-    if (!tasks.length && selectedTaskIds.length) {
+    if (!selectedTaskIds.length) return
+    if (!tasks.length) {
       dispatch(clearSelection())
       return
     }
@@ -124,7 +125,7 @@ export function TaskListPage() {
     if (next.length !== selectedTaskIds.length) {
       dispatch(setSelectedTaskIds(next))
     }
-  }, [dispatch, selectedTaskIds, tasks])
+  }, [dispatch, tasks, selectedTaskIds])
 
   const lastSelectedIdxRef = useRef(-1)
 
@@ -244,10 +245,10 @@ export function TaskListPage() {
         <TaskListToolbar
           batchMode={batchMode}
           health={health}
-          tasks={tasks}
           projects={projects}
           selectedProjectId={filters.projectId}
           showSelectionToggle={tasks.length > 0}
+          totalCount={tasksResponse?.total ?? tasks.length}
           onToggleBatchMode={handleToggleBatchMode}
           onProjectChange={(projectId) => setFilters({ projectId })}
         />

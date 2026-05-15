@@ -81,6 +81,7 @@ async def test_analytics_empty_when_no_projects(auth_client, db_session):
     assert response.status_code == 200
     assert response.json() == {
         "total_tasks": 0,
+        "published_count": 0,
         "success_rate": 0.0,
         "avg_duration_seconds": 0.0,
         "tasks_by_status": {
@@ -192,6 +193,7 @@ async def test_analytics_success_rate(auth_client, db_session, test_user):
     assert response.status_code == 200
     payload = response.json()
     assert payload["total_tasks"] == 6
+    assert payload["published_count"] == 1
     assert payload["success_rate"] == 0.75
     assert payload["tasks_by_status"] == {
         "queued": 1,
@@ -248,8 +250,24 @@ async def test_analytics_tasks_per_day_and_top_errors(auth_client, db_session, t
     assert response.status_code == 200
     payload = response.json()
     assert payload["tasks_per_day"] == [
-        {"date": "2026-05-01", "count": 1},
-        {"date": "2026-05-02", "count": 2},
+        {
+            "date": "2026-05-01",
+            "queued": 0,
+            "running": 0,
+            "done": 0,
+            "failed": 1,
+            "published": 0,
+            "conflict": 0,
+        },
+        {
+            "date": "2026-05-02",
+            "queued": 0,
+            "running": 0,
+            "done": 0,
+            "failed": 2,
+            "published": 0,
+            "conflict": 0,
+        },
     ]
     assert payload["top_errors"] == [
         {"error_type": "ValidationError", "count": 2},
@@ -326,6 +344,7 @@ async def test_analytics_empty_range_returns_zeroes(auth_client, db_session, tes
     assert response.status_code == 200
     assert response.json() == {
         "total_tasks": 0,
+        "published_count": 0,
         "success_rate": 0.0,
         "avg_duration_seconds": 0.0,
         "tasks_by_status": {
@@ -389,6 +408,22 @@ async def test_analytics_date_range_boundary(auth_client, db_session, test_user)
     payload = response.json()
     assert payload["total_tasks"] == 2
     assert payload["tasks_per_day"] == [
-        {"date": "2026-05-01", "count": 1},
-        {"date": "2026-05-02", "count": 1},
+        {
+            "date": "2026-05-01",
+            "queued": 0,
+            "running": 0,
+            "done": 1,
+            "failed": 0,
+            "published": 0,
+            "conflict": 0,
+        },
+        {
+            "date": "2026-05-02",
+            "queued": 0,
+            "running": 0,
+            "done": 1,
+            "failed": 0,
+            "published": 0,
+            "conflict": 0,
+        },
     ]

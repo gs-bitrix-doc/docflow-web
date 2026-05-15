@@ -120,6 +120,13 @@ export function useTaskListNotifications(
   useEffect(() => {
     if (dismissedTaskIds.size > 0) {
       DISMISSED_TASK_IDS_BY_SCOPE.set(scopeKey, dismissedTaskIds)
+      // Prune oldest entries to prevent unbounded map growth
+      if (DISMISSED_TASK_IDS_BY_SCOPE.size > 50) {
+        const firstKey = DISMISSED_TASK_IDS_BY_SCOPE.keys().next().value
+        if (firstKey !== undefined) {
+          DISMISSED_TASK_IDS_BY_SCOPE.delete(firstKey)
+        }
+      }
     }
 
     const nextTaskIdsByScope = replaceScopeTaskIds(taskIdsByScope, scopeKey, newTaskIds)

@@ -13,8 +13,9 @@ import { EmptyState } from '@/shared/ui/EmptyState/EmptyState'
 import { Field } from '@/shared/ui/Field/Field'
 import { Input } from '@/shared/ui/Input/Input'
 import { InlineAlert } from '@/shared/ui/InlineAlert/InlineAlert'
+import { SectionCard } from '@/shared/ui/SectionCard/SectionCard'
 import { useCreateProjectMutation, useGetGithubReposQuery } from '../../api/projectsApi'
-import { type ProjectCreateFormValues, projectCreateSchema } from '../../lib/schemas'
+import { type ProjectCreateFormValues, createProjectCreateSchema } from '../../lib/schemas'
 import { ExcludePatternsInput } from '../ExcludePatternsInput'
 import { RepoCombobox } from '../RepoCombobox'
 import { WebhookSecretModal } from '../WebhookSecretModal'
@@ -51,7 +52,7 @@ export function NewRepositoryPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<ProjectCreateFormValues>({
-    resolver: zodResolver(projectCreateSchema),
+    resolver: zodResolver(createProjectCreateSchema()),
     defaultValues: {
       name: '',
       source_repo: '',
@@ -84,11 +85,6 @@ export function NewRepositoryPage() {
         current={t('new_title')}
       />
 
-      <div className={styles.header}>
-        <h1 className={styles.title}>{t('new_title')}</h1>
-        <p className={styles.subtitle}>{t('new_subtitle')}</p>
-      </div>
-
       {!githubLinked ? (
         <EmptyState
           icon={FolderGit2}
@@ -110,172 +106,173 @@ export function NewRepositoryPage() {
             </>
           }
         />
-      ) : null}
-
-      {githubLinked && submitError ? (
-        <InlineAlert className={styles.submitError}>{submitError}</InlineAlert>
-      ) : null}
-
-      {githubLinked ? (
-        <form
-          className={styles.form}
-          onSubmit={(event) => {
-            void onSubmit(event)
-          }}
-          noValidate
-        >
-          {/* General */}
-          <section className={styles.section}>
-            <div className={styles.sectionLabel}>{t('section_general')}</div>
-            <Field
-              label={t('name_label')}
-              htmlFor="project-name"
-              error={errors.name?.message}
-              required
-            >
-              <Input
-                id="project-name"
-                placeholder={t('name_placeholder')}
-                error={Boolean(errors.name)}
-                {...register('name')}
-              />
-            </Field>
-          </section>
-
-          {/* Repositories */}
-          <section className={styles.section}>
-            <div className={styles.sectionLabel}>{t('section_repositories')}</div>
-
-            <div className={styles.row}>
-              <Field
-                label={t('source_repo_label')}
-                htmlFor="source-repo"
-                error={errors.source_repo?.message}
-                required
-              >
-                <Controller
-                  control={control}
-                  name="source_repo"
-                  render={({ field }) => (
-                    <RepoCombobox
-                      id="source-repo"
-                      error={Boolean(errors.source_repo)}
-                      loading={isReposLoading}
-                      placeholder={t('repo_placeholder')}
-                      repos={repos}
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                  )}
-                />
-              </Field>
-
-              <div className={styles.rowArrow} aria-hidden>
-                <ArrowRight size={14} />
-              </div>
-
-              <Field
-                label={t('target_repo_label')}
-                htmlFor="target-repo"
-                error={errors.target_repo?.message}
-                required
-              >
-                <Controller
-                  control={control}
-                  name="target_repo"
-                  render={({ field }) => (
-                    <RepoCombobox
-                      id="target-repo"
-                      error={Boolean(errors.target_repo)}
-                      loading={isReposLoading}
-                      placeholder={t('repo_placeholder')}
-                      repos={repos}
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                  )}
-                />
-              </Field>
-            </div>
-
-            <div className={styles.row}>
-              <Field
-                label={t('source_branch_label')}
-                htmlFor="source-branch"
-                error={errors.source_branch?.message}
-                required
-              >
-                <Input
-                  id="source-branch"
-                  placeholder={t('branch_placeholder')}
-                  error={Boolean(errors.source_branch)}
-                  {...register('source_branch')}
-                />
-              </Field>
-
-              <div className={styles.rowArrow} aria-hidden>
-                <ArrowRight size={14} />
-              </div>
-
-              <Field
-                label={t('target_branch_label')}
-                htmlFor="target-branch"
-                error={errors.target_branch?.message}
-                required
-              >
-                <Input
-                  id="target-branch"
-                  placeholder={t('branch_placeholder')}
-                  error={Boolean(errors.target_branch)}
-                  {...register('target_branch')}
-                />
-              </Field>
-            </div>
-          </section>
-
-          {/* Filters */}
-          <section className={styles.section}>
-            <div className={styles.sectionLabel}>{t('section_filters')}</div>
-            <Field
-              label={
-                <>
-                  {t('exclude_patterns_label')}{' '}
-                  <span className={styles.optional}>— {t('exclude_patterns_optional')}</span>
-                </>
-              }
-              error={errors.exclude_patterns?.message}
-              hint={t('exclude_patterns_hint')}
-            >
-              <Controller
-                control={control}
-                name="exclude_patterns"
-                render={({ field }) => (
-                  <ExcludePatternsInput
-                    error={Boolean(errors.exclude_patterns)}
-                    placeholder={t('exclude_patterns_placeholder')}
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-            </Field>
-          </section>
-
-          <div className={styles.footer}>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => void navigate('/repositories')}
-              type="button"
-            >
-              {t('cancel_create')}
-            </Button>
-            <Button size="sm" loading={isLoading} type="submit">
-              {t('save_project')}
-            </Button>
+      ) : (
+        <>
+          <div className={styles.header}>
+            <h1 className={styles.title}>{t('new_title')}</h1>
+            <p className={styles.subtitle}>{t('new_subtitle')}</p>
           </div>
-        </form>
-      ) : null}
+
+          {submitError ? (
+            <InlineAlert className={styles.submitError}>{submitError}</InlineAlert>
+          ) : null}
+
+          <form
+            className={styles.form}
+            onSubmit={(event) => {
+              void onSubmit(event)
+            }}
+            noValidate
+          >
+            {/* General */}
+            <SectionCard label={t('section_general')}>
+              <Field
+                label={t('name_label')}
+                htmlFor="project-name"
+                error={errors.name?.message}
+                required
+              >
+                <Input
+                  id="project-name"
+                  placeholder={t('name_placeholder')}
+                  error={Boolean(errors.name)}
+                  {...register('name')}
+                />
+              </Field>
+            </SectionCard>
+
+            {/* Repositories */}
+            <SectionCard label={t('section_repositories')}>
+              <div className={styles.row}>
+                <Field
+                  label={t('source_repo_label')}
+                  htmlFor="source-repo"
+                  error={errors.source_repo?.message}
+                  required
+                >
+                  <Controller
+                    control={control}
+                    name="source_repo"
+                    render={({ field }) => (
+                      <RepoCombobox
+                        id="source-repo"
+                        error={Boolean(errors.source_repo)}
+                        loading={isReposLoading}
+                        placeholder={t('repo_placeholder')}
+                        repos={repos}
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
+                  />
+                </Field>
+
+                <div className={styles.rowArrow} aria-hidden>
+                  <ArrowRight size={14} />
+                </div>
+
+                <Field
+                  label={t('target_repo_label')}
+                  htmlFor="target-repo"
+                  error={errors.target_repo?.message}
+                  required
+                >
+                  <Controller
+                    control={control}
+                    name="target_repo"
+                    render={({ field }) => (
+                      <RepoCombobox
+                        id="target-repo"
+                        error={Boolean(errors.target_repo)}
+                        loading={isReposLoading}
+                        placeholder={t('repo_placeholder')}
+                        repos={repos}
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
+                  />
+                </Field>
+              </div>
+
+              <div className={styles.row}>
+                <Field
+                  label={t('source_branch_label')}
+                  htmlFor="source-branch"
+                  error={errors.source_branch?.message}
+                  required
+                >
+                  <Input
+                    id="source-branch"
+                    placeholder={t('branch_placeholder')}
+                    error={Boolean(errors.source_branch)}
+                    {...register('source_branch')}
+                  />
+                </Field>
+
+                <div className={styles.rowArrow} aria-hidden>
+                  <ArrowRight size={14} />
+                </div>
+
+                <Field
+                  label={t('target_branch_label')}
+                  htmlFor="target-branch"
+                  error={errors.target_branch?.message}
+                  required
+                >
+                  <Input
+                    id="target-branch"
+                    placeholder={t('branch_placeholder')}
+                    error={Boolean(errors.target_branch)}
+                    {...register('target_branch')}
+                  />
+                </Field>
+              </div>
+            </SectionCard>
+
+            {/* Filters */}
+            <SectionCard label={t('section_filters')}>
+              <Field
+                label={
+                  <>
+                    {t('exclude_patterns_label')}{' '}
+                    <span className={styles.optional}>— {t('exclude_patterns_optional')}</span>
+                  </>
+                }
+                error={errors.exclude_patterns?.message}
+                hint={t('exclude_patterns_hint')}
+              >
+                <Controller
+                  control={control}
+                  name="exclude_patterns"
+                  render={({ field }) => (
+                    <ExcludePatternsInput
+                      error={Boolean(errors.exclude_patterns)}
+                      placeholder={t('exclude_patterns_placeholder')}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+              </Field>
+            </SectionCard>
+
+            <div className={styles.footer}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => void navigate('/repositories')}
+                type="button"
+              >
+                {t('cancel_create')}
+              </Button>
+              <Button size="sm" loading={isLoading} type="submit">
+                {t('save_project')}
+              </Button>
+            </div>
+          </form>
+        </>
+      )}
 
       {secretModal ? (
         <WebhookSecretModal

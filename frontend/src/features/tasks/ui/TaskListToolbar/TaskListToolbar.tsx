@@ -1,8 +1,6 @@
 import { Square } from 'lucide-react'
-import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Project } from '@/features/projects/model/types'
-import type { TaskSummary } from '@/features/tasks/model/types'
 import type { HealthResponse } from '@/shared/api/healthApi'
 import { cn } from '@/shared/lib/cn'
 import { ProjectFilterPopover } from '../ProjectFilterPopover'
@@ -11,10 +9,10 @@ import styles from './TaskListToolbar.module.css'
 interface TaskListToolbarProps {
   batchMode: boolean
   health: HealthResponse | undefined
-  tasks: TaskSummary[]
   projects: Project[]
   selectedProjectId: string | null
   showSelectionToggle: boolean
+  totalCount: number
   onToggleBatchMode: () => void
   onProjectChange: (projectId: string | null) => void
 }
@@ -22,24 +20,15 @@ interface TaskListToolbarProps {
 export function TaskListToolbar({
   batchMode,
   health,
-  tasks,
   projects,
   selectedProjectId,
   showSelectionToggle,
+  totalCount,
   onToggleBatchMode,
   onProjectChange,
 }: TaskListToolbarProps) {
   const { t } = useTranslation('tasks')
   const isWebhookActive = Boolean(health?.last_webhook_at)
-  const projectCounts = useMemo(() => {
-    const counts: Record<string, number> = {}
-    for (const task of tasks) {
-      if (task.project_id) {
-        counts[task.project_id] = (counts[task.project_id] ?? 0) + 1
-      }
-    }
-    return counts
-  }, [tasks])
 
   return (
     <div className={styles.toolbar}>
@@ -75,8 +64,7 @@ export function TaskListToolbar({
         <ProjectFilterPopover
           projects={projects}
           selectedId={selectedProjectId}
-          totalCount={tasks.length}
-          projectCounts={projectCounts}
+          totalCount={totalCount}
           onChange={onProjectChange}
         />
       </div>

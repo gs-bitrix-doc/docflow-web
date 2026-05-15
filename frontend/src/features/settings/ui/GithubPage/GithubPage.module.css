@@ -1,0 +1,53 @@
+.errorAlert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.clearError {
+  flex-shrink: 0;
+  padding: 0 4px;
+  color: inherit;
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.6;
+  transition: opacity 120ms ease;
+}
+
+.clearError:hover {
+  opacity: 1;
+}
+
+.connected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.connectedInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.githubIcon {
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.connectedLabel {
+  color: var(--text-faint);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.connectedLogin {
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 500;
+}

@@ -6,6 +6,7 @@ import logging
 from typing import Annotated, Any
 from uuid import UUID
 
+from cryptography.fernet import InvalidToken
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
@@ -18,7 +19,7 @@ from app.models.user import User
 from app.services import pipeline_runner
 from app.services import task_list_events
 from app.services.auth import decrypt_github_access_token, decrypt_webhook_secret
-from app.services.github import GitHubClient
+from app.services.github import GitHubAPIError, GitHubClient
 from app.services.tasks import _apply_exclude_patterns
 from app.services.webhook import is_valid_github_signature
 
@@ -181,7 +182,15 @@ async def github_webhook(
             detail="GitHub account is not linked",
         )
 
-    github_client = GitHubClient(decrypt_github_access_token(owner.github_access_token))
+    try:
+        access_token = decrypt_github_access_token(owner.github_access_token)
+    except InvalidToken:
+        logger.error("webhook_token_decrypt_failed", extra={"project_id": str(project.id)})
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="GitHub access token is corrupted — please re-link your GitHub account",
+        )
+    github_client = GitHubClient(access_token)
     commit_message = None
     commit_author_name = None
     commit_author_login = None
@@ -216,9 +225,21 @@ async def github_webhook(
         )
         return file_path, original_content, source_file_sha, target_file_sha
 
-    fetched = await asyncio.gather(
-        *[_fetch_file_metadata(fp) for fp in files_to_process]
-    )
+    try:
+        fetched = await asyncio.gather(
+            *[_fetch_file_metadata(fp) for fp in files_to_process]
+        )
+    except GitHubAPIError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    except Exception as exc:
+        logger.exception(
+            "webhook_fetch_unexpected_error",
+            extra={"project_id": str(project.id), "exc_type": type(exc).__name__},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Unexpected error fetching files: {type(exc).__name__}: {exc}",
+        ) from exc
 
     tasks_to_create: list[Task] = [
         Task(
@@ -238,8 +259,19 @@ async def github_webhook(
         for file_path, original_content, source_file_sha, target_file_sha in fetched
     ]
 
-    session.add_all(tasks_to_create)
-    await session.commit()
+    try:
+        session.add_all(tasks_to_create)
+        await session.commit()
+    except Exception as exc:
+        logger.exception(
+            "webhook_commit_failed",
+            extra={"project_id": str(project.id), "exc_type": type(exc).__name__},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save tasks: {type(exc).__name__}: {exc}",
+        ) from exc
+
     for task in tasks_to_create:
         task_list_events.publish_task_entered_scope(task)
     for task in tasks_to_create:

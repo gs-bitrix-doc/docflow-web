@@ -3,11 +3,16 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict
 
 
-class TasksPerDayPoint(BaseModel):
+class TasksPerDayBucket(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     date: str
-    count: int
+    queued: int
+    running: int
+    done: int
+    failed: int
+    published: int
+    conflict: int
 
 
 class TopErrorStat(BaseModel):
@@ -21,8 +26,9 @@ class AnalyticsResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     total_tasks: int
+    published_count: int
     success_rate: float
     avg_duration_seconds: float
     tasks_by_status: dict[str, int]
-    tasks_per_day: list[TasksPerDayPoint]
+    tasks_per_day: list[TasksPerDayBucket]
     top_errors: list[TopErrorStat]

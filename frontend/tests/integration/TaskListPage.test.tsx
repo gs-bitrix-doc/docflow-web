@@ -455,17 +455,11 @@ describe('TaskListPage', () => {
 
     const dialog = await screen.findByRole('dialog')
     expect(within(dialog).getByText('Markdown-файл')).toBeInTheDocument()
+    // No project is available so the "no project" option is pre-selected;
+    // target-path input only appears when a project is selected
     expect(within(dialog).queryByText('Проект')).not.toBeInTheDocument()
-    expect(
-      within(dialog).getByText(
-        'Задача будет создана без привязки к репозиторию. Её можно будет скачать, но не опубликовать в GitHub.',
-      ),
-    ).toBeInTheDocument()
+    expect(within(dialog).queryByPlaceholderText('docs/manual/new-page.md')).not.toBeInTheDocument()
 
-    await user.type(
-      within(dialog).getByPlaceholderText('docs/manual/new-page.md'),
-      'docs/manual/new-page.md',
-    )
     const fileInput = dialog.querySelector('input[type="file"]')
     expect(fileInput).not.toBeNull()
     await user.upload(

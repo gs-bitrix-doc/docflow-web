@@ -93,7 +93,7 @@ export function DateRangePicker({
   const triggerLabel = getTriggerLabel(from, to, labels.placeholder)
 
   return (
-    <Popover.Root open={open} onOpenChange={setOpen}>
+    <Popover.Root open={open} onOpenChange={setOpen} modal={false}>
       <Popover.Trigger asChild>
         <button
           type="button"

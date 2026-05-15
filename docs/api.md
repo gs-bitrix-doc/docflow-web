@@ -762,6 +762,29 @@ file: <binary .md file>
 
 ---
 
+### GET /dictionaries
+
+Получить список словарей для sidebar-навигации.
+
+**Response 200:**
+```json
+{
+  "items": [
+    { "dict_type": "dictionary", "entry_count": 152 },
+    { "dict_type": "glossary", "entry_count": 48 },
+    { "dict_type": "static_terms", "entry_count": 31 },
+    { "dict_type": "section_headings", "entry_count": 12 },
+    { "dict_type": "note_titles", "entry_count": 18 },
+    { "dict_type": "include_labels", "entry_count": 9 },
+    { "dict_type": "prompt", "entry_count": 1 }
+  ]
+}
+```
+
+`entry_count` уже учитывает merged-снимок base + user записей.
+
+---
+
 ### GET /dictionaries/{dict_type}
 
 Получить merged-снимок словаря: базовые записи из `pipeline/data/` + текущие записи из БД.
